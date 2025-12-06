@@ -16,8 +16,8 @@ This document outlines the strategy for collecting data on public sector job all
 
 ### Data Volume (as of 6 Dec 2024)
 - **Total Pages:** 347 pages
-- **Postings per Page:** 5 job postings
-- **Total Estimated Postings:** ~1,735 postings
+- **Postings per Page:** 10 job postings
+- **Total Estimated Postings:** ~3,470 postings
 - **Date Range:** Latest posting started 24 Nov 2024, ending 5 Dec 2024
 
 ### Data Fields to Collect
@@ -72,10 +72,25 @@ This document outlines the strategy for collecting data on public sector job all
 - **Full Period:** 2+ years (if test successful)
 
 ### Website Structure
-- **Pagination:** Results paginated (347 pages × 5 postings per page)
-- **Detail Page:** Each posting links to a new page with full details
-- **Click Interaction:** Click "Ver más" to load detail page for each posting
-- **Unique Identifier:** Each posting has a unique ID; institution name also serves as identifier
+- **Pagination:** Results paginated (347 pages × 10 postings per page)
+- **List Page:** Shows 10 job posting summaries per page
+- **Detail Page:** Click "¡Ver más!" button → opens new page with full details
+- **Detail Page Layout:**
+  - **Section 1: "Sobre el aviso"** contains:
+    - Requirements (Experience, Academic Profile, Specialization, Knowledge, Competencies)
+    - Detail link (not useful)
+    - Total number of vacancies
+    - Number of job posting (contains legal contract type)
+    - Salary
+    - Posting start date
+    - Posting end date
+  - **Section 2: "Resumen del aviso"** contains:
+    - Job title
+    - Institution name
+    - Total number of vacancies (duplicate)
+    - Number of job posting (duplicate)
+  - **Unique Posting ID** displayed separately on page
+- **Navigation:** "Volver a la lista" button returns to list page
 
 ### Data Quality Rules
 **Include postings that have:**
