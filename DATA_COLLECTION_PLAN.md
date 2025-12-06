@@ -21,20 +21,54 @@ This document outlines the strategy for collecting data on public sector job all
 - **Date Range:** Latest posting started 24 Nov 2024, ending 5 Dec 2024
 
 ### Data Fields to Collect
-- **Institution** (unique identifier available)
-- **Job Title**
-- **Experience Requirements**
-- **Academic Profile**
-- **Contract Type**
-- **Salary**
-- **Posting Date**
-- **Closing Date**
-- **Unique Posting ID** (auto-assigned by SERVIR)
+| Field Name | Spanish Name | Raw Data Type | Notes |
+|---|---|---|---|
+| posting_id | NÚMERO DE CONVOCATORIA | String (numeric) | Unique identifier, e.g., "735144" |
+| institution | INSTITUCIÓN | String | Full institution name |
+| job_title | Aviso title | String | Job position title |
+| number_of_vacancies | CANTIDAD DE VACANTES | Integer | Number of positions available |
+| experience_requirements | EXPERIENCIA | String (unstructured) | Free text, may vary in format |
+| academic_profile | FORMACIÓN ACADÉMICA - PERFIL | String (unstructured) | Education requirements, often vague |
+| specialization | ESPECIALIZACIÓN | String (unstructured) | Specialization needed, optional |
+| knowledge | CONOCIMIENTO | String (unstructured) | Technical knowledge, optional |
+| competencies | COMPETENCIAS | String (unstructured) | Required competencies, optional |
+| salary | REMUNERACIÓN | String (numeric with currency) | Format: "S/. 4,000.00" (needs parsing) |
+| posting_start_date | FECHA INICIO DE PUBLICACIÓN | String (date) | Format: DD/MM/YYYY, e.g., "05/12/2025" |
+| posting_end_date | FECHA FIN DE PUBLICACIÓN | String (date) | Format: DD/MM/YYYY, e.g., "22/12/2025" |
+| convocatoria_number | NÚMERO DE CONVOCATORIA (full) | String | Format: "D.LEG 1057 - DETERMINADO..." (contains contract type) |
+| scrape_date | (system generated) | DateTime | Timestamp of scrape, format: YYYY-MM-DD HH:MM:SS |
+
+### Data Processing Pipeline (To Be Built)
+**Phase 1: Raw Data Collection**
+- Scrape fields as-is from SERVIR portal
+- Store in SQLite with raw string/text types
+
+**Phase 2: Data Cleaning & Standardization**
+- Parse `salary` → extract numeric value and standardize currency (all PEN)
+- Parse `posting_start_date` and `posting_end_date` → convert to ISO format (YYYY-MM-DD)
+- Parse `convocatoria_number` → extract contract type (CAS, PLAZA PRESUPUESTADA, etc.)
+- Standardize institution names (handle variations, abbreviations)
+- Handle missing/vague values (e.g., "DE ACUERDO A LAS BASES ADMINISTRATIVAS")
+
+**Phase 3: Data Quality Flagging**
+- Flag records with missing or vague requirements
+- Flag salary inconsistencies
+- Flag data quality issues for manual review
+
+**Phase 4: Analysis Dataset**
+- Export cleaned data to `data/processed/servir_postings_cleaned.csv`
+- Ready for analysis
 
 ### Collection Strategy
-- **Frequency:** Daily scraping at a fixed time (e.g., 9:00 AM)
-- **Scope:** Collect all postings visible on day t for day t-1 activity
-- **Test Period:** 3 months (initial validation phase)
+- **Frequency:** Weekly manual scraping (every Monday, or fixed day)
+- **Method:** Run `python src/scrape_servir.py` manually once per week
+- **Scope:** Capture all currently visible postings with timestamp
+- **Storage:** SQLite database (`data/raw/servir_postings.db`)
+  - Table: `postings` with columns (posting_id PRIMARY KEY, institution, job_title, experience, academic_profile, contract_type, salary, posting_date, closing_date, scrape_date)
+- **Deduplication:** Database primary key on posting_id prevents duplicates; only new postings are inserted
+- **Tracking:** `scrape_date` column records when each posting was first collected
+- **Export:** Convert to CSV for analysis phase (`data/processed/servir_postings_analyzed.csv`)
+- **Test Period:** 3 months (13 weekly scrapes for initial validation)
 - **Full Period:** 2+ years (if test successful)
 
 ### Website Structure
