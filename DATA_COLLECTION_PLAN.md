@@ -35,7 +35,7 @@ This document outlines the strategy for collecting data on public sector job all
 | salary | REMUNERACIÓN | String (numeric with currency) | Format: "S/. 4,000.00" (needs parsing) |
 | posting_start_date | FECHA INICIO DE PUBLICACIÓN | String (date) | Format: DD/MM/YYYY, e.g., "05/12/2025" |
 | posting_end_date | FECHA FIN DE PUBLICACIÓN | String (date) | Format: DD/MM/YYYY, e.g., "22/12/2025" |
-| convocatoria_number | NÚMERO DE CONVOCATORIA (full) | String | Format: "D.LEG 1057 - DETERMINADO..." (contains contract type) |
+| contract_type_raw | NÚMERO DE CONVOCATORIA (full) | String | Raw legal reference, e.g., "D.LEG 1057 - DETERMINADO (NECESIDAD TRANSITORIA)-005". Extract contract type during processing: CAS, PLAZA PRESUPUESTADA, D.LEG 1057, etc. |
 | scrape_date | (system generated) | DateTime | Timestamp of scrape, format: YYYY-MM-DD HH:MM:SS |
 
 ### Data Processing Pipeline (To Be Built)
@@ -46,7 +46,7 @@ This document outlines the strategy for collecting data on public sector job all
 **Phase 2: Data Cleaning & Standardization**
 - Parse `salary` → extract numeric value and standardize currency (all PEN)
 - Parse `posting_start_date` and `posting_end_date` → convert to ISO format (YYYY-MM-DD)
-- Parse `convocatoria_number` → extract contract type (CAS, PLAZA PRESUPUESTADA, etc.)
+- Parse `contract_type_raw` → extract contract type category (CAS, PLAZA PRESUPUESTADA, D.LEG 1057, etc.) → new field `contract_type`
 - Standardize institution names (handle variations, abbreviations)
 - Handle missing/vague values (e.g., "DE ACUERDO A LAS BASES ADMINISTRATIVAS")
 
