@@ -151,12 +151,91 @@ async def scrape_posting_detail(page, posting_url):
         print(f"Error scraping {posting_url}: {e}")
         return None
 
+def save_posting_to_db(posting_data):
+    """
+    Save posting data to SQLite database
+    
+    Args:
+        posting_data: Dictionary with posting information
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    if not posting_data or not posting_data.get('posting_id'):
+        return False
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT OR IGNORE INTO postings 
+            (posting_id, institution, job_title, number_of_vacancies, 
+             experience_requirements, academic_profile, specialization, 
+             knowledge, competencies, salary, posting_start_date, 
+             posting_end_date, contract_type_raw, scrape_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            posting_data['posting_id'],
+            posting_data['institution'],
+            posting_data['job_title'],
+            posting_data['number_of_vacancies'],
+            posting_data['experience_requirements'],
+            posting_data['academic_profile'],
+            posting_data['specialization'],
+            posting_data['knowledge'],
+            posting_data['competencies'],
+            posting_data['salary'],
+            posting_data['posting_start_date'],
+            posting_data['posting_end_date'],
+            posting_data['contract_type_raw'],
+            posting_data['scrape_date']
+        ))
+        
+        conn.commit()
+        conn.close()
+        return True
+        
+    except Exception as e:
+        print(f"Error saving posting {posting_data.get('posting_id')}: {e}")
+        return False
+
 async def main():
     """Main scraper function"""
     print("Starting SERVIR scraper...")
     init_database()
     
-    # We'll add more logic here soon
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+        
+        try:
+            # Navigate to SERVIR portal
+            servir_url = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
+            await page.goto(servir_url, wait_until="networkidle")
+            print("Connected to SERVIR portal")
+            
+            # Scrape only the first page for testing
+            posting_urls = await scrape_page(page, 1)
+            
+            # Scrape details for each posting found
+            for i, url in enumerate(posting_urls, 1):
+                print(f"Scraping posting {i}/{len(posting_urls)}...")
+                posting_data = await scrape_posting_detail(page, url)
+                
+                if posting_data:
+                    if save_posting_to_db(posting_data):
+                        print(f"✓ Saved posting {posting_data['posting_id']}")
+                    else:
+                        print(f"✗ Failed to save posting {posting_data['posting_id']}")
+                
+                # Go back to list
+                await page.goto(servir_url, wait_until="networkidle")
+            
+            print("Scraping complete!")
+            
+        finally:
+            await browser.close()
     
 if __name__ == "__main__":
     asyncio.run(main())
