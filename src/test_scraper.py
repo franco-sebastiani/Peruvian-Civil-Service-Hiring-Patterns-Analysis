@@ -60,7 +60,7 @@ async def debug():
                                 // Try parent's next sibling
                                 let nextRow = container?.nextElementSibling;
                                 detalle = nextRow?.querySelector('.detalle-sp');
-                                if (detalle) return detalle.textContent.trim();
+                                if (detaille) return detalle.textContent.trim();
                                 
                                 return null;
                             }}
@@ -130,19 +130,20 @@ async def debug():
                 competencies = await extract_requirement_field("COMPETENCIAS:")
                 print(f"competencies: {competencies[:100] if competencies else None}...")
                 
-                # Extract posting unique ID (from the right-side summary section)
+                # Extract posting unique ID
                 posting_unique_id = await page.evaluate("""
                     () => {
-                        // Look for the span in the cuadro-seccion-lat (right sidebar section)
-                        let sidebar = document.querySelector('.cuadro-seccion-lat');
-                        if (sidebar) {
-                            let span = sidebar.querySelector('span');
-                            if (span) return span.textContent.trim();
+                        let elements = document.querySelectorAll('.sub-titulo-2');
+                        for (let el of elements) {
+                            if (el.textContent.includes('N°')) {
+                                let match = el.textContent.match(/\\d+/);
+                                return match ? match[0] : null;
+                            }
                         }
                         return null;
                     }
                 """)
-                print(f"posting_unique_id: {posting_unique_id.replace(chr(10), '').replace(chr(13), '').strip() if posting_unique_id else None}")
+                print(f"posting_unique_id: {posting_unique_id}")
                 
                 print("\n✓ All fields extracted successfully!")
             

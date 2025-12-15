@@ -87,7 +87,7 @@ async def scrape_posting_detail(page, posting_url):
         institution = institution.replace('INSTITUCIÓN:', '').strip() if institution else None
         
         # Extract job title (from "Resumen del aviso" section)
-        job_title = await page.locator('text=/^[A-Z0-9-]+ [A-Z]/).first.text_content()')
+        job_title = await page.locator('text=/^[A-Z0-9-]+ [A-Z]/').first.text_content()
         
         # Extract salary
         salary = await page.locator('text=REMUNERACIÓN:').locator('..').text_content()
@@ -206,7 +206,7 @@ async def main():
     init_database()
     
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.firefox.launch()
         page = await browser.new_page()
         
         try:
