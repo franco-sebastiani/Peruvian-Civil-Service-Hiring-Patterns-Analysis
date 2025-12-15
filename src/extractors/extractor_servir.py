@@ -3,7 +3,8 @@ import sys
 from pathlib import Path
 
 # Add project root to Python path so imports work
-sys.path.insert(0, str(Path(__file__).parent.parent))
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
 from playwright.async_api import async_playwright
 from config.servir_fields import SIMPLE_FIELDS, REQUIREMENT_FIELDS, SPECIAL_FIELDS, FIELD_ORDER
@@ -143,7 +144,7 @@ async def print_job_data(data):
     
     print("=" * 60 + "\n")
 
-async def debug(job_offer_index=0):
+async def fetch_job_offer(job_offer_index=0):
     """
     Debug function to test extraction on different job offers.
     
@@ -193,7 +194,7 @@ async def debug(job_offer_index=0):
 
 if __name__ == "__main__":
     # Test on different job offers by changing the index
-    asyncio.run(debug(job_offer_index=0))
+    asyncio.run(fetch_job_offer(job_offer_index=0))
     
     # Uncomment to test other job offers:
     # asyncio.run(debug(job_offer_index=1))
