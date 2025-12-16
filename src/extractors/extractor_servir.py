@@ -159,22 +159,22 @@ async def fetch_job_offer(job_offer_index=0):
             servir_url = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
             await page.goto(servir_url, wait_until="networkidle")
             await page.wait_for_timeout(3000)
-            print(f"✓ List page loaded")
+            print(f"List page loaded")
             
             # Find all "Ver más" buttons
             ver_mas_buttons = await page.locator('button:has-text("Ver más")').all()
-            print(f"✓ Found {len(ver_mas_buttons)} job offers available\n")
+            print(f"Found {len(ver_mas_buttons)} job offers available\n")
             
             # Check that the requested index exists
             if job_offer_index >= len(ver_mas_buttons):
-                print(f"✗ Error: Only {len(ver_mas_buttons)} job offers found. Index {job_offer_index} is out of range.")
+                print(f"Error: Only {len(ver_mas_buttons)} job offers found. Index {job_offer_index} is out of range.")
                 await browser.close()
                 return
             
-            print(f"→ Clicking job offer #{job_offer_index + 1}...")
+            print(f"Clicking job offer #{job_offer_index + 1}...")
             await ver_mas_buttons[job_offer_index].click()
             await page.wait_for_timeout(3000)
-            print(f"✓ Detail page loaded")
+            print(f"Detail page loaded")
             
             # Extract all data
             job_data = await extract_job_posting(page)
@@ -182,10 +182,10 @@ async def fetch_job_offer(job_offer_index=0):
             # Display results
             await print_job_data(job_data)
             
-            print("✓ Extraction completed successfully!")
+            print("Extraction completed successfully!")
             
         except Exception as e:
-            print(f"\n✗ Error: {e}")
+            print(f"\nError: {e}")
             import traceback
             traceback.print_exc()
             
