@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from extractors.extractor_servir import fetch_job_offer
+from src.extractors.servir_extractor import fetch_job_offer
 
 async def main():
     """Loop through all 10 job offers on the first page."""
