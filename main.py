@@ -13,7 +13,7 @@ import asyncio
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.extractors.servir_extractor import fetch_job_offer
+from servir.src.scraper import scrape_job_offer
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     
     # For now, test extraction on job offer #1
     # Later this will loop through all 3,470 postings and save to database
-    asyncio.run(fetch_job_offer(job_offer_index=0))
+    asyncio.run(scrape_job_offer(job_offer_index=0))
 
 
 if __name__ == "__main__":

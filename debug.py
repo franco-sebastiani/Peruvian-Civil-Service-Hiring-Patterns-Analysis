@@ -1,24 +1,51 @@
+"""
+Debug utilities for testing and inspecting scraped data.
+
+These functions are for development/testing only. Production code will
+save data to a database instead of printing to console.
+"""
 import asyncio
-import sys
-from pathlib import Path
+from servir.src.scraper import scrape_job_offer
+from servir.config.field_definitions import FIELD_ORDER
 
-sys.path.insert(0, str(Path(__file__).parent))
 
-from src.extractors.servir_extractor import fetch_job_offer
-
-async def main():
-    """Loop through all 10 job offers on the first page."""
+def print_job_data(data):
+    """
+    Pretty print extracted job offer data in a structured format.
     
+    Used for testing and debugging the scraper. In production, data will
+    be saved to a database instead.
+    
+    Args:
+        data (dict): Job offer data dictionary with field names as keys
+    
+    Returns:
+        None: Prints directly to console
+    """
     print("\n" + "=" * 60)
-    print("Testing extraction on first page (10 job offers)")
-    print("=" * 60 + "\n")
+    print("EXTRACTED JOB POSTING DATA")
+    print("=" * 60)
     
-    for job_index in range(10):
-        print(f"\n{'='*60}")
-        print(f"Extracting job offer {job_index + 1}/10")
-        print(f"{'='*60}")
-        await fetch_job_offer(job_offer_index=job_index)
+    for field_name in FIELD_ORDER:
+        value = data.get(field_name)
+        
+        if value is None:
+            display_value = "[NOT FOUND]"
+        elif isinstance(value, str) and len(value) > 100:
+            display_value = value[:100] + "..."
+        else:
+            display_value = value
+        
+        print(f"{field_name:.<35} {display_value}")
+    
+    print("=" * 60 + "\n")
+
+# In main.py or a test script
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def test():
+    job_data = await scrape_job_offer(job_offer_index=8)
+    if job_data:
+        print_job_data(job_data)
+
+asyncio.run(test())
