@@ -13,7 +13,7 @@ import asyncio
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from src.extractors.extractor_servir import fetch_job_offer
+from src.extractors.servir_extractor import fetch_job_offer
 
 
 def main():

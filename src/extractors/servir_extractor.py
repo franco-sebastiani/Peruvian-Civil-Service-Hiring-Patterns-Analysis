@@ -144,10 +144,8 @@ async def print_job_data(data):
     
     print("=" * 60 + "\n")
 
-async def fetch_job_offer(job_offer_index=0):
-    """
-    Debug function to test extraction on different job offers.
-    
+async def extract_job_offer(job_offer_index=0):
+    """ 
     Args:
         job_offer_index: Which job offer to extract (0 = 1st, 1 = 2nd, 2 = 3rd, etc.)
     """
