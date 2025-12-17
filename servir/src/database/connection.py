@@ -31,7 +31,7 @@ def get_db_path():
         return db_path
         
     except OSError as e:
-        print(f"✗ Error creating database directory: {e}")
+        print(f"Error creating database directory: {e}")
         raise  # Re-raise the error so caller knows it failed
 
 
@@ -60,11 +60,11 @@ def get_connection():
         return conn
         
     except sqlite3.Error as e:
-        print(f"✗ Database connection error: {e}")
+        print(f"Database connection error: {e}")
         return None
         
     except Exception as e:
-        print(f"✗ Unexpected error connecting to database: {e}")
+        print(f"Unexpected error connecting to database: {e}")
         return None
 
 
@@ -84,4 +84,4 @@ def close_connection(conn):
         try:
             conn.close()
         except sqlite3.Error as e:
-            print(f"✗ Error closing database connection: {e}")
+            print(f"Error closing database connection: {e}")

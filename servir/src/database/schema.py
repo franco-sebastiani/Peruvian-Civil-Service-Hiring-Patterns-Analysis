@@ -39,7 +39,7 @@ def create_job_postings_table():
     conn = get_connection()
     
     if not conn:
-        print("✗ Failed to connect to database for table creation")
+        print("Failed to connect to database for table creation")
         return False
     
     try:
@@ -69,7 +69,7 @@ def create_job_postings_table():
         return True
         
     except Exception as e:
-        print(f"✗ Error creating job_postings table: {e}")
+        print(f"Error creating job_postings table: {e}")
         return False
         
     finally:
@@ -104,8 +104,8 @@ def initialize_database():
     success = create_job_postings_table()
     
     if success:
-        print("✓ Database initialized successfully")
+        print("Database initialized successfully")
         return True
     else:
-        print("✗ Database initialization failed")
+        print("Database initialization failed")
         return False
