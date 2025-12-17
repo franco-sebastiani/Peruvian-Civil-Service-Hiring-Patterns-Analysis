@@ -44,7 +44,7 @@ def print_job_data(data):
 
 
 async def test():
-    job_data = await scrape_job_offer(job_offer_index=8)
+    job_data = await scrape_job_offer(job_offer_index=0)
     if job_data:
         print_job_data(job_data)
 
