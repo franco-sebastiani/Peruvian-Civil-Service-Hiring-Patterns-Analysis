@@ -1,71 +1,71 @@
 """
-Web scraper for SERVIR job postings.
+Web scraper for extracting a single SERVIR job offer.
 
-Handles browser automation, navigation, and orchestrates the extraction
-of job offer data from the SERVIR portal.
+Handles extracting one job's details from the detail page,
+then returning to the listing page.
 """
 
-from playwright.async_api import async_playwright
 from servir.src.extractors.job_assembler import assemble_job_offer
 
 
-async def scrape_job_offer(job_offer_index=0):
+SERVIR_LISTING_URL = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
+
+
+async def scrape_single_job(page, job_index):
     """
-    Scrape a single job offer from the SERVIR portal.
+    Extract ONE job from the SERVIR listing page.
     
-    This function handles the complete scraping workflow:
-    1. Launch browser and navigate to SERVIR job listings
-    2. Find and click on the specified job offer
-    3. Extract all job data from the detail page
-    4. Return the extracted data (for database storage or debugging)
-    5. Clean up browser resources
+    Process:
+    1. Get fresh button references on listing page
+    2. Click the specified job
+    3. Extract all details from detail page
+    4. Navigate back to listing page (direct navigation, not history)
     
     Args:
-        job_offer_index (int): Zero-based index of which job offer to scrape
-                               (0 = first job, 1 = second job, etc.)
+        page: Playwright page object (should be on listing page)
+        job_index: Zero-based index of job to extract (0 = first job)
     
     Returns:
-        dict or None: Extracted job offer data, or None if extraction failed
+        dict: Job data with all fields, or None if extraction failed
     """
-    async with async_playwright() as p:
-        browser = await p.firefox.launch()
-        page = await browser.new_page()
+    try:
+        # Get FRESH button references each time
+        buttons = await page.locator('button:has-text("Ver más")').all()
         
-        try:
-            # Navigate to SERVIR job listings page
-            servir_url = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
-            await page.goto(servir_url, wait_until="networkidle")
-            await page.wait_for_timeout(3000)
-            print(f"List page loaded")
-            
-            # Find all "Ver más" buttons (one per job offer)
-            ver_mas_buttons = await page.locator('button:has-text("Ver más")').all()
-            print(f"Found {len(ver_mas_buttons)} job offers available\n")
-            
-            # Validate requested index
-            if job_offer_index >= len(ver_mas_buttons):
-                print(f"Error: Only {len(ver_mas_buttons)} job offers found. Index {job_offer_index} is out of range.")
-                await browser.close()
-                return None
-            
-            # Click on the specified job offer
-            print(f"Clicking job offer #{job_offer_index + 1}...")
-            await ver_mas_buttons[job_offer_index].click()
-            await page.wait_for_timeout(3000)
-            print(f"Detail page loaded")
-            
-            # Extract all job data using the assembler
-            job_data = await assemble_job_offer(page)
-            
-            print("Extraction completed successfully!")
-            
-            return job_data
-            
-        except Exception as e:
-            print(f"\nError during scraping: {e}")
-            import traceback
-            traceback.print_exc()
+        # Validate index
+        if job_index >= len(buttons):
+            print(f"    ✗ Job {job_index}: Index out of range (only {len(buttons)} jobs on page)")
             return None
-            
-        finally:
-            await browser.close()
+        
+        # Click the job to open detail page
+        print(f"    Clicking job {job_index}...", end=" ", flush=True)
+        await buttons[job_index].click()
+        await page.wait_for_timeout(2000)
+        print(f"clicked, extracting...", end=" ", flush=True)
+        
+        # Extract all fields from detail page
+        job_data = await assemble_job_offer(page)
+        
+        if not job_data:
+            print(f"✗ (no data)")
+            return None
+        
+        # Return to listing page by direct navigation (not history)
+        # go_back() doesn't work with this site's JavaScript routing
+        await page.goto(SERVIR_LISTING_URL, wait_until="networkidle")
+        await page.wait_for_timeout(1500)
+        print(f"✓")
+        
+        return job_data
+        
+    except Exception as e:
+        print(f"    ✗ Job {job_index}: {str(e)}")
+        
+        # Try to recover by navigating directly to listing page
+        try:
+            await page.goto(SERVIR_LISTING_URL, wait_until="networkidle")
+            await page.wait_for_timeout(1500)
+        except:
+            pass
+        
+        return None

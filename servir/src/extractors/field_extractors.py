@@ -1,6 +1,10 @@
 """
 HTML parsing functions for extracting individual fields from SERVIR job postings.
+
+Uses Playwright locators instead of page.evaluate() for more reliable extraction
+and better page state management.
 """
+
 
 async def extract_simple_field(page, label_text):
     """
@@ -19,33 +23,20 @@ async def extract_simple_field(page, label_text):
         str or None: The extracted value, or None if not found
     """
     try:
-        value = await page.evaluate(f"""
-            () => {{
-                let el = document.evaluate(
-                    "//*[contains(text(), '{label_text}')]",
-                    document,
-                    null,
-                    XPathResult.FIRST_ORDERED_NODE_TYPE,
-                    null
-                ).singleNodeValue;
-                
-                if (!el) return null;
-                
-                // Look for detalle-sp in the same row or nearby
-                let container = el.closest('.row');
-                let detalle = container?.querySelector('.detalle-sp');
-                
-                if (detalle) return detalle.textContent.trim();
-                
-                // Try parent's next sibling
-                let nextRow = container?.nextElementSibling;
-                detalle = nextRow?.querySelector('.detalle-sp');
-                if (detalle) return detalle.textContent.trim();
-                
-                return null;
-            }}
-        """)
-        return value
+        # Find the label element containing the text
+        label = page.locator(f"text='{label_text}'").first
+        
+        # Get the closest .row container
+        container = await label.evaluate('el => el.closest(".row")')
+        
+        if not container:
+            return None
+        
+        # Look for detalle-sp within this container
+        detalle = page.locator('.detalle-sp').first
+        value = await detalle.text_content()
+        
+        return value.strip() if value else None
         
     except Exception as e:
         return None
@@ -67,28 +58,35 @@ async def extract_requirement_field(page, label_text):
         str or None: The extracted value, or None if not found
     """
     try:
-        value = await page.evaluate(f"""
-            () => {{
-                // Find all elements with the label text
-                let elements = document.querySelectorAll('.sub-titulo-2');
-                
-                for (let el of elements) {{
-                    if (el.textContent.includes('{label_text}')) {{
-                        // Look for next sibling that is detalle-sp
+        # Find all sub-titulo-2 elements
+        labels = page.locator('.sub-titulo-2')
+        count = await labels.count()
+        
+        for i in range(count):
+            label = labels.nth(i)
+            text = await label.text_content()
+            
+            # Check if this label contains our target text
+            if label_text in text:
+                # Get the next element that is detalle-sp
+                # Navigate to parent, find next detalle-sp sibling
+                next_elem = await label.evaluate("""
+                    el => {
                         let next = el.nextElementSibling;
-                        while (next) {{
-                            if (next.classList.contains('detalle-sp')) {{
+                        while (next) {
+                            if (next.classList.contains('detalle-sp')) {
                                 return next.textContent.trim();
-                            }}
+                            }
                             next = next.nextElementSibling;
-                        }}
-                    }}
-                }}
+                        }
+                        return null;
+                    }
+                """)
                 
-                return null;
-            }}
-        """)
-        return value
+                if next_elem:
+                    return next_elem
+        
+        return None
         
     except Exception as e:
         return None
@@ -114,21 +112,23 @@ async def extract_special_fields(page):
     
     # Extract job title
     try:
-        job_title = await page.locator('span.sp-aviso0').text_content()
+        job_title_elem = page.locator('span.sp-aviso0').first
+        job_title = await job_title_elem.text_content()
         special_data["job_title"] = job_title.strip() if job_title else None
     except Exception:
         special_data["job_title"] = None
     
     # Extract institution name
     try:
-        institution = await page.locator('span.sp-aviso').text_content()
+        institution_elem = page.locator('span.sp-aviso').first
+        institution = await institution_elem.text_content()
         special_data["institution"] = institution.strip() if institution else None
     except Exception:
         special_data["institution"] = None
     
     # Extract posting unique ID (the N° field)
     try:
-        posting_unique_id = await page.evaluate("""
+        posting_id = await page.evaluate("""
             () => {
                 let elements = document.querySelectorAll('.sub-titulo-2');
                 for (let el of elements) {
@@ -140,7 +140,7 @@ async def extract_special_fields(page):
                 return null;
             }
         """)
-        special_data["posting_unique_id"] = posting_unique_id
+        special_data["posting_unique_id"] = posting_id
     except Exception:
         special_data["posting_unique_id"] = None
     
