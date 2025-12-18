@@ -2,7 +2,9 @@
 Data collection pipeline for SERVIR job postings.
 
 Main orchestrator that coordinates:
+- Browser initialization and management
 - Database initialization
+- Page navigation
 - Web scraping across all pages and jobs
 - Data storage
 - Progress reporting
@@ -10,6 +12,7 @@ Main orchestrator that coordinates:
 
 import asyncio
 from datetime import datetime
+from playwright.async_api import async_playwright
 from servir.src.scraper import scrape_job_offer
 from servir.src.database.schema import initialize_database
 from servir.src.database.operations import insert_job_offer
@@ -22,17 +25,16 @@ async def collect_all_servir_jobs():
     
     Orchestrates the complete workflow:
     1. Initialize database
-    2. Loop through all job offers
-    3. Scrape each job
-    4. Save to database (skip duplicates)
-    5. Report progress and final statistics
+    2. Open browser and navigate to SERVIR
+    3. Loop through all pages (1-264)
+    4. For each page:
+       - Loop through jobs (0-9, or fewer on last page)
+       - Scrape each job
+       - Save to database
+       - Navigate to next page
+    5. Close browser and report statistics
     
-    The pipeline loops through each job offer sequentially:
-    - Page 1: jobs 0-9 (10 jobs)
-    - Page 2: jobs 10-19 (10 jobs)
-    - ...
-    - Page 264: jobs 2630-2632 (3 jobs)
-    Total: ~2,633 jobs
+    Total: ~2,633 jobs across 264 pages
     
     Returns:
         dict: Statistics about the collection run
@@ -58,6 +60,7 @@ async def collect_all_servir_jobs():
     # Step 2: Collection statistics
     stats = {
         'start_time': datetime.now(),
+        'pages_processed': 0,
         'jobs_encountered': 0,
         'jobs_saved': 0,
         'jobs_skipped_duplicate': 0,
@@ -65,90 +68,131 @@ async def collect_all_servir_jobs():
         'errors': []
     }
     
-    # Step 3: Scrape all jobs
+    # Step 3: Open browser and scrape all pages
     print("\n" + "-"*70)
     print("STEP 2: Scraping All Job Offers")
     print("-"*70)
     print(f"\nStarting to scrape all ~2,633 job offers...\n")
     
-    # Based on our test: 263 pages × 10 jobs + 1 page × 3 jobs = 2,633 jobs
-    # We'll loop through job indices until scraper returns None (can't find job)
-    
-    job_index = 0
-    consecutive_failures = 0
-    max_consecutive_failures = 3  # Stop if 3 scrapes fail in a row
-    
-    while True:
+    async with async_playwright() as p:
+        browser = await p.firefox.launch()
+        page = await browser.new_page()
+        
         try:
-            # Attempt to scrape job at this index
-            job_data = await scrape_job_offer(job_offer_index=job_index)
+            # Navigate to SERVIR job listings page
+            servir_url = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
+            await page.goto(servir_url, wait_until="networkidle")
+            await page.wait_for_timeout(3000)
+            print("✓ SERVIR page loaded\n")
             
-            if not job_data:
-                consecutive_failures += 1
+            total_pages = 264
+            total_jobs_scraped = 0
+            
+            # Loop through all pages
+            for page_number in range(1, total_pages + 1):
+                try:
+                    page_jobs_count = 0
+                    
+                    # Loop through jobs on this page
+                    job_index = 0
+                    while True:
+                        try:
+                            # Scrape job at this index on current page
+                            job_data = await scrape_job_offer(page, job_offer_index=job_index)
+                            
+                            if not job_data:
+                                # No more jobs on this page
+                                break
+                            
+                            page_jobs_count += 1
+                            total_jobs_scraped += 1
+                            stats['jobs_encountered'] += 1
+                            
+                            # Extract posting ID
+                            posting_id = job_data.get('posting_unique_id')
+                            
+                            if not posting_id:
+                                print(f"✗ Page {page_number}, Job {job_index}: Missing posting_unique_id")
+                                stats['jobs_failed'] += 1
+                                stats['errors'].append(f"Page {page_number}, Job {job_index}: Missing posting_unique_id")
+                                job_index += 1
+                                continue
+                            
+                            # Check if already exists
+                            if job_exists(posting_id):
+                                stats['jobs_skipped_duplicate'] += 1
+                                job_index += 1
+                                continue
+                            
+                            # Save to database
+                            success, message = insert_job_offer(job_data)
+                            
+                            if success:
+                                stats['jobs_saved'] += 1
+                                # Only print first job of page for cleaner output
+                                if job_index == 0:
+                                    print(f"✓ Page {page_number}: {message}")
+                            else:
+                                stats['jobs_failed'] += 1
+                                print(f"✗ Page {page_number}, Job {job_index}: Failed to save - {message}")
+                                stats['errors'].append(f"Page {page_number}, Job {job_index}: {message}")
+                            
+                            job_index += 1
+                        
+                        except Exception as e:
+                            error_msg = f"Page {page_number}, Job {job_index}: {str(e)}"
+                            print(f"✗ {error_msg}")
+                            stats['errors'].append(error_msg)
+                            stats['jobs_failed'] += 1
+                            break  # Stop trying jobs on this page if error
+                    
+                    # Page completed
+                    stats['pages_processed'] += 1
+                    print(f"  Page {page_number}: {page_jobs_count} jobs ({total_jobs_scraped} total)")
+                    
+                    # Progress report every 50 pages
+                    if page_number % 50 == 0:
+                        print(f"\n--- Progress: Page {page_number}/{total_pages} ---")
+                        print(f"    Jobs saved: {stats['jobs_saved']}")
+                        print(f"    Jobs skipped: {stats['jobs_skipped_duplicate']}")
+                        print(f"    Jobs failed: {stats['jobs_failed']}\n")
+                    
+                    # Navigate to next page if not on last page
+                    if page_number < total_pages:
+                        try:
+                            # Find and click the "Next" (Sig.) button
+                            next_button = page.locator('button.btn-paginator:has-text("Sig.")').first
+                            
+                            # Check if button exists and is enabled
+                            is_disabled = await next_button.evaluate('el => el.getAttribute("aria-disabled")')
+                            
+                            if is_disabled == "false":
+                                await next_button.click()
+                                await page.wait_for_timeout(3000)
+                            else:
+                                print(f"⚠ Next button disabled at page {page_number}")
+                                break
+                        
+                        except Exception as e:
+                            error_msg = f"Page {page_number}: Failed to navigate to next page - {str(e)}"
+                            print(f"⚠ {error_msg}")
+                            stats['errors'].append(error_msg)
+                            break
                 
-                if consecutive_failures >= max_consecutive_failures:
-                    print(f"\n✓ Reached end of available jobs (index {job_index})")
-                    break
-                else:
-                    print(f"⚠ Job {job_index}: Failed to scrape (attempt {consecutive_failures}/{max_consecutive_failures})")
-                    job_index += 1
-                    continue
-            
-            # Reset consecutive failures counter
-            consecutive_failures = 0
-            stats['jobs_encountered'] += 1
-            
-            # Extract posting ID
-            posting_id = job_data.get('posting_unique_id')
-            
-            if not posting_id:
-                print(f"✗ Job {job_index}: Missing posting_unique_id")
-                stats['jobs_failed'] += 1
-                stats['errors'].append(f"Job {job_index}: Missing posting_unique_id")
-                job_index += 1
-                continue
-            
-            # Check if already exists
-            if job_exists(posting_id):
-                stats['jobs_skipped_duplicate'] += 1
-                if job_index % 100 == 0:
-                    print(f"⊘ Job {job_index}: {posting_id} already exists (skipped)")
-                job_index += 1
-                continue
-            
-            # Save to database
-            success, message = insert_job_offer(job_data)
-            
-            if success:
-                stats['jobs_saved'] += 1
-                if job_index % 100 == 0:
-                    print(f"✓ Job {job_index}: Saved {message}")
-            else:
-                stats['jobs_failed'] += 1
-                print(f"✗ Job {job_index}: Failed to save - {message}")
-                stats['errors'].append(f"Job {job_index}: {message}")
-            
-            # Progress report every 250 jobs
-            if job_index % 250 == 0 and job_index > 0:
-                print(f"\n--- Progress: Job {job_index} ---")
-                print(f"    Saved: {stats['jobs_saved']}")
-                print(f"    Skipped (duplicates): {stats['jobs_skipped_duplicate']}")
-                print(f"    Failed: {stats['jobs_failed']}\n")
-            
-            job_index += 1
+                except Exception as e:
+                    error_msg = f"Page {page_number}: {str(e)}"
+                    print(f"✗ {error_msg}")
+                    stats['errors'].append(error_msg)
+                    break  # Stop if page processing fails
         
         except Exception as e:
-            error_msg = f"Job {job_index}: {str(e)}"
-            print(f"✗ {error_msg}")
-            stats['errors'].append(error_msg)
-            stats['jobs_failed'] += 1
-            consecutive_failures += 1
-            
-            if consecutive_failures >= max_consecutive_failures:
-                print(f"\nStopping due to repeated failures")
-                break
-            
-            job_index += 1
+            print(f"✗ Critical error: {e}")
+            import traceback
+            traceback.print_exc()
+            stats['errors'].append(f"Critical error: {e}")
+        
+        finally:
+            await browser.close()
     
     # Step 4: Final report
     print("\n" + "="*70)
@@ -162,6 +206,7 @@ async def collect_all_servir_jobs():
     print(f"Duration: {duration:.1f} seconds ({duration/60:.1f} minutes)")
     
     print(f"\nCollection statistics:")
+    print(f"  Pages processed: {stats['pages_processed']}/{total_pages}")
     print(f"  Jobs encountered: {stats['jobs_encountered']}")
     print(f"  Jobs saved: {stats['jobs_saved']}")
     print(f"  Jobs skipped (duplicate): {stats['jobs_skipped_duplicate']}")
