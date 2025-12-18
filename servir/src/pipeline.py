@@ -11,12 +11,9 @@ Main orchestrator that coordinates:
 import asyncio
 from datetime import datetime
 from servir.src.scraper import scrape_job_offer
-from servir.src.database import (
-    initialize_database,
-    insert_job_offer,
-    job_exists,
-    get_job_count
-)
+from servir.src.database.schema import initialize_database
+from servir.src.database.operations import insert_job_offer
+from servir.src.database.queries import job_exists, get_job_count
 
 
 async def collect_all_servir_jobs():
