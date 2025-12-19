@@ -8,20 +8,20 @@ Used by the scraper to extract job posting data.
 
 # Simple fields: extracted using sub-titulo labels
 SIMPLE_FIELDS = {
-    "number_of_vacancies": "CANTIDAD DE VACANTES:",
-    "salary": "REMUNERACIÓN:",
-    "posting_start_date": "FECHA INICIO DE",
-    "posting_end_date": "FECHA FIN DE PUBLICACIÓN:",
-    "contract_type_raw": "NÚMERO DE CONVOCATORIA:",
+    "number_of_vacancies": "CANTIDAD DE VACANTES",
+    "monthly_salary": "REMUNERACIÓN",
+    "posting_start_date": "FECHA INICIO",
+    "posting_end_date": "FECHA FIN DE PUBLICACIÓN",
+    "contract_type_raw": "NÚMERO DE CONVOCATORIA",
 }
 
 # Requirement fields: extracted from sub-titulo-2 labels in <li> tags
 REQUIREMENT_FIELDS = {
-    "experience_requirements": "EXPERIENCIA:",
+    "experience_requirements": "EXPERIENCIA",
     "academic_profile": "FORMACIÓN",
-    "specialization": "ESPECIALIZACIÓN:",
-    "knowledge": "CONOCIMIENTO:",
-    "competencies": "COMPETENCIAS:",
+    "specialization": "ESPECIALIZACIÓN",
+    "knowledge": "CONOCIMIENTO",
+    "competencies": "COMPETENCIAS",
 }
 
 # Special fields: extracted using custom logic (CSS selectors, JavaScript, etc.)
