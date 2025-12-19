@@ -1,7 +1,8 @@
 """
 HTML parsing functions for extracting individual fields from SERVIR job postings.
 
-Uses Playwright locators for reliable extraction and better page state management.
+Uses Playwright locators instead of page.evaluate() for more reliable extraction
+and better page state management.
 """
 
 
@@ -10,42 +11,32 @@ async def extract_simple_field(page, label_text):
     Extract fields that use the 'sub-titulo' label pattern.
     
     This pattern is used for basic job posting information like salary,
-    vacancies, dates, etc. The function finds a span with class 'sub-titulo'
-    containing the label text, then gets the next 'detalle-sp' span.
-    
-    Structure in HTML:
-    <span class="sub-titulo">REMUNERACIÓN: </span>
-    <span class="detalle-sp">S/. 6,000.00</span>
+    number of vacancies, publication dates, etc. The function finds a label
+    containing the specified text, then locates the corresponding value in
+    a 'detalle-sp' element nearby.
     
     Args:
         page: Playwright page object
-        label_text (str): The label text to search for (e.g., "REMUNERACIÓN")
+        label_text (str): The label text to search for (e.g., "Remuneración mensual")
     
     Returns:
         str or None: The extracted value, or None if not found
     """
     try:
-        # Find the label by searching all sub-titulo spans for the text
-        value = await page.evaluate(f"""
-            () => {{
-                let labels = document.querySelectorAll('span.sub-titulo');
-                for (let label of labels) {{
-                    if (label.textContent.includes('{label_text}')) {{
-                        // Found the label, now get next detalle-sp sibling
-                        let next = label.nextElementSibling;
-                        while (next) {{
-                            if (next.classList && next.classList.contains('detalle-sp')) {{
-                                return next.textContent.trim();
-                            }}
-                            next = next.nextElementSibling;
-                        }}
-                    }}
-                }}
-                return null;
-            }}
-        """)
+        # Find the label element containing the text
+        label = page.locator(f"text='{label_text}'").first
         
-        return value
+        # Get the closest .row container
+        container = await label.evaluate('el => el.closest(".row")')
+        
+        if not container:
+            return None
+        
+        # Look for detalle-sp within this container
+        detalle = page.locator('.detalle-sp').first
+        value = await detalle.text_content()
+        
+        return value.strip() if value else None
         
     except Exception as e:
         return None
@@ -61,7 +52,7 @@ async def extract_requirement_field(page, label_text):
     
     Args:
         page: Playwright page object
-        label_text (str): The label text to search for (e.g., "EXPERIENCIA")
+        label_text (str): The label text to search for (e.g., "Experiencia")
     
     Returns:
         str or None: The extracted value, or None if not found
@@ -78,6 +69,7 @@ async def extract_requirement_field(page, label_text):
             # Check if this label contains our target text
             if label_text in text:
                 # Get the next element that is detalle-sp
+                # Navigate to parent, find next detalle-sp sibling
                 next_elem = await label.evaluate("""
                     el => {
                         let next = el.nextElementSibling;
