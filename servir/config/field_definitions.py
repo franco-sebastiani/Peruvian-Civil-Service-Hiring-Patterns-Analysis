@@ -46,7 +46,7 @@ FIELD_ORDER = [
     "job_title",
     "posting_start_date",
     "posting_end_date",
-    "salary",
+    "monthly_salary",
     "number_of_vacancies",
     "contract_type_raw",
     "experience_requirements",
