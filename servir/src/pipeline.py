@@ -94,8 +94,6 @@ async def get_total_pages(page):
     """
     Extract total page count from SERVIR's page indicator.
     
-    Looks for text like "Página 1 de 264"
-    
     Args:
         page: Playwright page object
     
@@ -108,7 +106,7 @@ async def get_total_pages(page):
         if match:
             return int(match.group(2))
     except Exception as e:
-        print(f"⚠ Could not determine total pages: {e}")
+        print(f"Could not determine total pages: {e}")
     
     return 0
 
@@ -130,7 +128,7 @@ async def get_jobs_on_current_page(page):
         buttons = await page.locator('button:has-text("Ver más")').all()
         return list(range(len(buttons)))
     except Exception as e:
-        print(f"⚠ Error getting jobs on page: {e}")
+        print(f"Error getting jobs on page: {e}")
         return []
 
 
@@ -162,7 +160,7 @@ async def navigate_next_page(page):
         return True
         
     except Exception as e:
-        print(f"⚠ Error navigating to next page: {e}")
+        print(f"Error navigating to next page: {e}")
         return False
 
 
@@ -195,11 +193,11 @@ async def collect_all_servir_jobs():
     print("-"*70)
     
     if not initialize_database():
-        print("✗ Failed to initialize database. Stopping.")
+        print("Failed to initialize database. Stopping.")
         return None
     
     initial_count = get_job_count()
-    print(f"✓ Database ready. Currently contains: {initial_count} jobs")
+    print(f"Database ready. Currently contains: {initial_count} jobs")
     
     # Step 2: Initialize statistics
     stats = {
@@ -229,12 +227,12 @@ async def collect_all_servir_jobs():
             print(f"Navigating to SERVIR: {SERVIR_URL}")
             await page.goto(SERVIR_URL, wait_until="networkidle")
             await page.wait_for_timeout(3000)
-            print("✓ SERVIR listing page loaded\n")
+            print("SERVIR listing page loaded\n")
             
             # Get total pages
             total_pages = await get_total_pages(page)
             if total_pages == 0:
-                print("✗ Could not determine total pages. Stopping.")
+                print("Could not determine total pages. Stopping.")
                 await browser.close()
                 return None
             
@@ -248,7 +246,7 @@ async def collect_all_servir_jobs():
                 # Re-check total pages each iteration (SERVIR updates dynamically)
                 updated_total = await get_total_pages(page)
                 if updated_total > 0 and updated_total != total_pages:
-                    print(f"⚠ Total pages changed: {total_pages} → {updated_total}")
+                    print(f"Total pages changed: {total_pages} → {updated_total}")
                     total_pages = updated_total
                 
                 print(f"Processing Page {current_page_num}/{total_pages}")
@@ -312,8 +310,8 @@ async def collect_all_servir_jobs():
                                 
                                 # Safeguard: 10 duplicates in a row = reached previous collection point
                                 if stats['consecutive_duplicates'] >= 10:
-                                    print(f"\n⚠ Found 10 consecutive duplicates. Reached previous collection point.")
-                                    print(f"⚠ Stopping collection to avoid wasting resources.")
+                                    print(f"\nFound 10 consecutive duplicates. Reached previous collection point.")
+                                    print(f"Stopping collection to avoid wasting resources.")
                                     await browser.close()
                                     
                                     # Jump to final report
@@ -356,7 +354,7 @@ async def collect_all_servir_jobs():
                     stats['pages_processed'] += 1
                     
                     # Progress report
-                    print(f"  ✓ Page complete")
+                    print(f"    Page complete")
                     print(f"    Saved: {stats['jobs_saved']} | Incomplete: {stats['jobs_saved_incomplete']} | Skipped: {stats['jobs_skipped_duplicate']} | Failed: {stats['jobs_failed']}")
                     print()
                     
@@ -364,13 +362,13 @@ async def collect_all_servir_jobs():
                     if current_page_num < total_pages:
                         success = await navigate_next_page(page)
                         if not success:
-                            print(f"✗ Failed to navigate to page {current_page_num + 1}. Stopping.")
+                            print(f"  Failed to navigate to page {current_page_num + 1}. Stopping.")
                             break
                     
                     current_page_num += 1
                     
                 except Exception as e:
-                    print(f"✗ Error processing page {current_page_num}: {e}")
+                    print(f"  Error processing page {current_page_num}: {e}")
                     stats['errors'].append(f"Page {current_page_num}: {str(e)}")
                     import traceback
                     traceback.print_exc()
@@ -418,7 +416,7 @@ async def collect_all_servir_jobs():
         if len(stats['errors']) > 10:
             print(f"  ... and {len(stats['errors']) - 10} more errors")
     else:
-        print(f"\n✓ No errors encountered!")
+        print(f"\n  No errors encountered!")
     
     print("\n" + "="*70 + "\n")
     

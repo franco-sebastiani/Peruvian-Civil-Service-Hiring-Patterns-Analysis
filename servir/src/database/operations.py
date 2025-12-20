@@ -22,20 +22,6 @@ def insert_job_offer(job_data):
         tuple: (success: bool, message: str)
             - success: True if inserted, False if error or duplicate
             - message: Description of what happened
-    
-    Example:
-        job_data = {
-            'posting_unique_id': '736308',
-            'job_title': 'Analista de Dados',
-            'institution': 'MINEDU',
-            'monthly_salary': 'S/ 5,000',
-            ...
-        }
-        success, msg = insert_job_offer(job_data)
-        if success:
-            print(f"✓ {msg}")
-        else:
-            print(f"✗ {msg}")
     """
     # Validate input
     if not job_data:
@@ -119,7 +105,6 @@ def insert_job_offer_incomplete(job_data, missing_fields):
     
     Returns:
         tuple: (success: bool, message: str)
-    
     """
     # Validate input
     if not job_data:
@@ -207,13 +192,6 @@ def update_job_offer(posting_unique_id, updated_fields):
     
     Returns:
         tuple: (success: bool, message: str)
-    
-    Example:
-        updated = {
-            'monthly_salary': 'S/ 6,000',
-            'number_of_vacancies': '3'
-        }
-        success, msg = update_job_offer('736308', updated)
     """
     if not updated_fields:
         return False, "No fields provided to update"
@@ -256,9 +234,6 @@ def delete_job_offer(posting_unique_id):
     
     Returns:
         tuple: (success: bool, message: str)
-    
-    Example:
-        success, msg = delete_job_offer('736308')
     """
     conn = get_connection()
     

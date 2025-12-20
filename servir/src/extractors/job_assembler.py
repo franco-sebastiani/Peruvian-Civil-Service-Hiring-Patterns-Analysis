@@ -37,19 +37,16 @@ async def assemble_job_offer(page):
     data = {}
     
     # Extract simple fields (sub-titulo pattern)
-    # These include: salary, vacancies, publication dates, etc.
     for field_name, label_text in SIMPLE_FIELDS.items():
         value = await extract_simple_field(page, label_text)
         data[field_name] = value
     
     # Extract requirement fields (sub-titulo-2 pattern)
-    # These include: experience, education, specialization, etc.
     for field_name, label_text in REQUIREMENT_FIELDS.items():
         value = await extract_requirement_field(page, label_text)
         data[field_name] = value
     
     # Extract special fields (custom patterns)
-    # These include: job_title, institution, posting_unique_id
     data['job_title'] = await extract_job_title(page)
     data['institution'] = await extract_institution(page)
     data['posting_unique_id'] = await extract_posting_unique_id(page)

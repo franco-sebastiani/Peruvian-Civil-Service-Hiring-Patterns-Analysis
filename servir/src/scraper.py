@@ -34,7 +34,7 @@ async def scrape_single_job(page, job_index):
         
         # Validate index
         if job_index >= len(buttons):
-            print(f"    ✗ Job {job_index}: Index out of range (only {len(buttons)} jobs on page)")
+            print(f"Job {job_index}: Index out of range (only {len(buttons)} jobs on page)")
             return None
         
         # Click the job to open detail page
@@ -47,19 +47,19 @@ async def scrape_single_job(page, job_index):
         job_data = await assemble_job_offer(page)
         
         if not job_data:
-            print(f"✗ (no data)")
+            print(f"(no data)")
             return None
         
         # Return to listing page by direct navigation (not history)
         # go_back() doesn't work with this site's JavaScript routing
         await page.goto(SERVIR_LISTING_URL, wait_until="networkidle")
         await page.wait_for_timeout(1500)
-        print(f"✓")
+        print(f"done")
         
         return job_data
         
     except Exception as e:
-        print(f"    ✗ Job {job_index}: {str(e)}")
+        print(f"Job {job_index}: {str(e)}")
         
         # Try to recover by navigating directly to listing page
         try:

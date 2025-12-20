@@ -12,24 +12,6 @@ def create_job_postings_table():
     """
     Create the job_postings table if it doesn't exist.
     
-    Table Structure:
-    ---------------
-    - id: INTEGER PRIMARY KEY (auto-incrementing)
-    - posting_unique_id: TEXT UNIQUE NOT NULL (SERVIR job ID, e.g., "736308")
-    - job_title: TEXT (job position title)
-    - institution: TEXT (government institution name)
-    - monthly_salary: TEXT (salary information)
-    - number_of_vacancies: TEXT (number of open positions)
-    - posting_start_date: TEXT (publication date)
-    - posting_end_date: TEXT (application deadline)
-    - contract_type_raw: TEXT (type of contract)
-    - experience_requirements: TEXT (required experience)
-    - academic_profile: TEXT (educational requirements)
-    - specialization: TEXT (required specialization)
-    - knowledge: TEXT (required knowledge areas)
-    - competencies: TEXT (required competencies)
-    - scraped_at: TIMESTAMP NOT NULL (when data was collected)
-    
     The posting_unique_id field has a UNIQUE constraint to prevent
     duplicate job postings from being saved.
     
@@ -82,29 +64,6 @@ def create_job_postings_incomplete_table():
     
     This table stores job postings that failed extraction (missing fields).
     Allows tracking of incomplete data and manual fixes applied.
-    
-    Table Structure:
-    ---------------
-    - id: INTEGER PRIMARY KEY (auto-incrementing)
-    - posting_unique_id: TEXT UNIQUE NOT NULL (SERVIR job ID)
-    - job_title: TEXT (may be None)
-    - institution: TEXT (may be None)
-    - monthly_salary: TEXT (may be None)
-    - number_of_vacancies: TEXT (may be None)
-    - posting_start_date: TEXT (may be None)
-    - posting_end_date: TEXT (may be None)
-    - contract_type_raw: TEXT (may be None)
-    - experience_requirements: TEXT (may be None)
-    - academic_profile: TEXT (may be None)
-    - specialization: TEXT (may be None)
-    - knowledge: TEXT (may be None)
-    - competencies: TEXT (may be None)
-    - missing_fields: TEXT (comma-separated list of None fields, e.g., "monthly_salary,number_of_vacancies")
-    - reviewed: BOOLEAN (have you manually reviewed and fixed this?)
-    - manually_fixed_fields: TEXT (comma-separated list of fields you manually filled in)
-    - notes: TEXT (optional notes about why it was incomplete or how you fixed it)
-    - scraped_at: TIMESTAMP NOT NULL (when data was collected)
-    - reviewed_at: TIMESTAMP (when you reviewed/fixed it)
     
     Returns:
         bool: True if table created/exists, False if error occurred
@@ -168,14 +127,8 @@ def initialize_database():
     
     Returns:
         bool: True if initialization successful, False otherwise
-    
-    Example:
-        # At the start of your pipeline
-        if initialize_database():
-            print("Database ready for data collection")
-        else:
-            print("Failed to initialize database")
     """
+
     print("Initializing database...")
     
     success1 = create_job_postings_table()

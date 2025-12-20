@@ -58,10 +58,6 @@ async def extract_simple_field(page, field_name):
     
     Simple fields (salary, dates, vacancies, contract type) use the 'sub-titulo' class.
     
-    Structure:
-    <span class="sub-titulo">REMUNERACIÓN: </span>
-    <span class="detalle-sp">S/. 1,400.00</span>
-    
     Args:
         page: Playwright page object
         field_name (str): The field to extract (e.g., "REMUNERACIÓN", "CANTIDAD DE VACANTES")
@@ -78,9 +74,6 @@ async def extract_requirement_field(page, field_name):
     
     Requirement fields (experience, education, specialization, etc.) use the 'sub-titulo-2' class.
     
-    Structure:
-    <li><span class="sub-titulo-2">EXPERIENCIA:</span><span class="detalle-sp">2 AÑOS</span></li>
-    
     Args:
         page: Playwright page object
         field_name (str): The requirement field to extract (e.g., "EXPERIENCIA", "CONOCIMIENTO")
@@ -94,8 +87,6 @@ async def extract_requirement_field(page, field_name):
 async def extract_job_title(page):
     """
     Extract the job title from the detail page.
-    
-    Uses the 'sp-aviso0' span class.
     
     Args:
         page: Playwright page object
@@ -114,8 +105,6 @@ async def extract_job_title(page):
 async def extract_institution(page):
     """
     Extract the institution name from the detail page.
-    
-    Uses the 'sp-aviso' span class.
     
     Args:
         page: Playwright page object

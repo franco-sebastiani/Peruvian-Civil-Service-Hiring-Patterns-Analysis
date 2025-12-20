@@ -18,7 +18,7 @@ async def main():
         print("\n\nInterrupted by user.")
         sys.exit(0)
     except Exception as e:
-        print(f"\n✗ Error: {e}")
+        print(f"\n  Error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
