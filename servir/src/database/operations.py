@@ -26,7 +26,7 @@ def insert_job_offer(job_data):
     Example:
         job_data = {
             'posting_unique_id': '736308',
-            'job_title': 'Analista de Datos',
+            'job_title': 'Analista de Dados',
             'institution': 'MINEDU',
             'monthly_salary': 'S/ 5,000',
             ...
@@ -97,6 +97,97 @@ def insert_job_offer(job_data):
         # Duplicate posting_unique_id
         job_id = job_data.get('posting_unique_id')
         return False, f"Job {job_id} already exists in database"
+        
+    except Exception as e:
+        return False, f"Database error: {str(e)}"
+        
+    finally:
+        close_connection(conn)
+
+
+def insert_job_offer_incomplete(job_data, missing_fields):
+    """
+    Insert a job offer with missing fields into the incomplete table.
+    
+    Used for jobs that failed extraction and need manual review.
+    Tracks which fields were missing and provides space for manual fixes.
+    
+    Args:
+        job_data (dict): Job offer data (may have None values)
+        missing_fields (list): List of field names that are None
+                              e.g., ['monthly_salary', 'number_of_vacancies']
+    
+    Returns:
+        tuple: (success: bool, message: str)
+    
+    """
+    # Validate input
+    if not job_data:
+        return False, "No job data provided"
+    
+    if not job_data.get('posting_unique_id'):
+        return False, "Missing required field: posting_unique_id"
+    
+    conn = get_connection()
+    
+    if not conn:
+        return False, "Failed to connect to database"
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Convert missing_fields list to comma-separated string
+        missing_fields_str = ", ".join(missing_fields) if missing_fields else ""
+        
+        cursor.execute("""
+            INSERT INTO job_postings_incomplete (
+                posting_unique_id,
+                job_title,
+                institution,
+                monthly_salary,
+                number_of_vacancies,
+                posting_start_date,
+                posting_end_date,
+                contract_type_raw,
+                experience_requirements,
+                academic_profile,
+                specialization,
+                knowledge,
+                competencies,
+                missing_fields,
+                reviewed,
+                scraped_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            job_data.get('posting_unique_id'),
+            job_data.get('job_title'),
+            job_data.get('institution'),
+            job_data.get('monthly_salary'),
+            job_data.get('number_of_vacancies'),
+            job_data.get('posting_start_date'),
+            job_data.get('posting_end_date'),
+            job_data.get('contract_type_raw'),
+            job_data.get('experience_requirements'),
+            job_data.get('academic_profile'),
+            job_data.get('specialization'),
+            job_data.get('knowledge'),
+            job_data.get('competencies'),
+            missing_fields_str,
+            False,  # reviewed = FALSE initially
+            datetime.now()
+        ))
+        
+        conn.commit()
+        
+        # Build success message
+        job_id = job_data.get('posting_unique_id')
+        job_title = job_data.get('job_title', 'Unknown Title')
+        return True, f"{job_id} - {job_title} (incomplete: {missing_fields_str})"
+        
+    except sqlite3.IntegrityError:
+        # Duplicate posting_unique_id
+        job_id = job_data.get('posting_unique_id')
+        return False, f"Job {job_id} already exists in incomplete table"
         
     except Exception as e:
         return False, f"Database error: {str(e)}"
