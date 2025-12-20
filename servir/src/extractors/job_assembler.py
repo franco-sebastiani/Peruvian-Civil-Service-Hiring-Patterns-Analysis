@@ -9,7 +9,9 @@ from servir.config.field_definitions import SIMPLE_FIELDS, REQUIREMENT_FIELDS, F
 from servir.src.extractors.field_extractors import (
     extract_simple_field,
     extract_requirement_field,
-    extract_special_fields
+    extract_job_title,
+    extract_institution,
+    extract_posting_unique_id
 )
 
 
@@ -31,15 +33,6 @@ async def assemble_job_offer(page):
     Returns:
         dict: Complete job offer data with all extracted fields. Missing fields 
               have None values. Keys match the field names defined in FIELD_ORDER.
-    
-    Example:
-        {
-            'job_title': 'Analista de Datos',
-            'institution': 'Ministerio de Educación',
-            'monthly_salary': 'S/ 5,000',
-            'vacancies': '2',
-            ...
-        }
     """
     data = {}
     
@@ -57,7 +50,8 @@ async def assemble_job_offer(page):
     
     # Extract special fields (custom patterns)
     # These include: job_title, institution, posting_unique_id
-    special_fields = await extract_special_fields(page)
-    data.update(special_fields)
+    data['job_title'] = await extract_job_title(page)
+    data['institution'] = await extract_institution(page)
+    data['posting_unique_id'] = await extract_posting_unique_id(page)
     
     return data
