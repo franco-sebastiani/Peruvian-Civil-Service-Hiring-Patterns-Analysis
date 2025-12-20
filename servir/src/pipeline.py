@@ -20,11 +20,74 @@ from playwright.async_api import async_playwright
 
 from servir.src.scraper import scrape_single_job
 from servir.src.database.schema import initialize_database
-from servir.src.database.operations import insert_job_offer
+from servir.src.database.operations import insert_job_offer, insert_job_offer_incomplete
 from servir.src.database.queries import job_exists, get_job_count
 
 
 SERVIR_URL = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
+
+
+def _is_data_complete(job_data):
+    """
+    Check if job data has all 13 required fields filled (no None values).
+    
+    Args:
+        job_data: dict with job offer data
+    
+    Returns:
+        bool: True if all fields are present and non-None, False otherwise
+    """
+    if not job_data:
+        return False
+    
+    # Check that all values are not None
+    for key, value in job_data.items():
+        if value is None:
+            return False
+    
+    return True
+
+
+def _get_missing_fields(job_data):
+    """
+    Get list of field names that are None in job_data.
+    
+    Args:
+        job_data: dict with job offer data
+    
+    Returns:
+        list: Field names that have None values
+    """
+    if not job_data:
+        return []
+    
+    missing = []
+    for key, value in job_data.items():
+        if value is None:
+            missing.append(key)
+    
+    return missing
+
+
+def _is_data_complete(job_data):
+    """
+    Check if job data has all 13 required fields filled (no None values).
+    
+    Args:
+        job_data: dict with job offer data
+    
+    Returns:
+        bool: True if all fields are present and non-None, False otherwise
+    """
+    if not job_data:
+        return False
+    
+    # Check that all values are not None
+    for key, value in job_data.items():
+        if value is None:
+            return False
+    
+    return True
 
 
 async def get_total_pages(page):
@@ -144,8 +207,10 @@ async def collect_all_servir_jobs():
         'pages_processed': 0,
         'jobs_encountered': 0,
         'jobs_saved': 0,
+        'jobs_saved_incomplete': 0,
         'jobs_skipped_duplicate': 0,
         'jobs_failed': 0,
+        'consecutive_duplicates': 0,
         'errors': []
     }
     
@@ -180,6 +245,12 @@ async def collect_all_servir_jobs():
             current_page_num = 1
             
             while current_page_num <= total_pages:
+                # Re-check total pages each iteration (SERVIR updates dynamically)
+                updated_total = await get_total_pages(page)
+                if updated_total > 0 and updated_total != total_pages:
+                    print(f"⚠ Total pages changed: {total_pages} → {updated_total}")
+                    total_pages = updated_total
+                
                 print(f"Processing Page {current_page_num}/{total_pages}")
                 print("-"*70)
                 
@@ -193,14 +264,40 @@ async def collect_all_servir_jobs():
                         try:
                             stats['jobs_encountered'] += 1
                             
-                            # Extract job details
+                            # Extract job details (with retry if incomplete)
                             job_data = await scrape_single_job(page, job_idx)
                             
                             if not job_data:
                                 stats['jobs_failed'] += 1
                                 continue
                             
-                            # Get posting ID for duplicate check
+                            # Check if data is complete (all 13 fields filled)
+                            if not _is_data_complete(job_data):
+                                # Retry once
+                                job_data = await scrape_single_job(page, job_idx)
+                                
+                                # Check again
+                                if not _is_data_complete(job_data):
+                                    # Still incomplete, save to incomplete table
+                                    posting_id = job_data.get('posting_unique_id')
+                                    
+                                    if posting_id:
+                                        missing_fields = _get_missing_fields(job_data)
+                                        success, message = insert_job_offer_incomplete(job_data, missing_fields)
+                                        
+                                        if success:
+                                            stats['jobs_saved_incomplete'] += 1
+                                            stats['consecutive_duplicates'] = 0  # Reset counter
+                                        else:
+                                            stats['jobs_failed'] += 1
+                                            stats['errors'].append(f"Page {current_page_num}, Job {job_idx}: Failed to save incomplete - {message}")
+                                    else:
+                                        stats['jobs_failed'] += 1
+                                        stats['errors'].append(f"Page {current_page_num}, Job {job_idx}: Missing posting_unique_id")
+                                    
+                                    continue
+                            
+                            # Data is complete, proceed with duplicate check and save
                             posting_id = job_data.get('posting_unique_id')
                             
                             if not posting_id:
@@ -211,6 +308,34 @@ async def collect_all_servir_jobs():
                             # Check if already exists
                             if job_exists(posting_id):
                                 stats['jobs_skipped_duplicate'] += 1
+                                stats['consecutive_duplicates'] += 1
+                                
+                                # Safeguard: 10 duplicates in a row = reached previous collection point
+                                if stats['consecutive_duplicates'] >= 10:
+                                    print(f"\n⚠ Found 10 consecutive duplicates. Reached previous collection point.")
+                                    print(f"⚠ Stopping collection to avoid wasting resources.")
+                                    await browser.close()
+                                    
+                                    # Jump to final report
+                                    stats['end_time'] = datetime.now()
+                                    duration = (stats['end_time'] - stats['start_time']).total_seconds()
+                                    
+                                    print("\n" + "="*70)
+                                    print("COLLECTION STOPPED - REACHED PREVIOUS POINT")
+                                    print("="*70)
+                                    print(f"\nCompleted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                                    print(f"Duration: {duration:.1f} seconds ({duration/60:.1f} minutes)")
+                                    print(f"\nScraping Statistics:")
+                                    print(f"  Pages processed: {stats['pages_processed']}")
+                                    print(f"  Jobs encountered: {stats['jobs_encountered']}")
+                                    print(f"  Jobs saved (complete): {stats['jobs_saved']}")
+                                    print(f"  Jobs saved (incomplete): {stats['jobs_saved_incomplete']}")
+                                    print(f"  Jobs skipped (duplicate): {stats['jobs_skipped_duplicate']}")
+                                    print(f"  Jobs failed: {stats['jobs_failed']}")
+                                    print("\n" + "="*70 + "\n")
+                                    
+                                    return stats
+                                
                                 continue
                             
                             # Save to database
@@ -218,6 +343,7 @@ async def collect_all_servir_jobs():
                             
                             if success:
                                 stats['jobs_saved'] += 1
+                                stats['consecutive_duplicates'] = 0  # Reset counter on successful save
                             else:
                                 stats['jobs_failed'] += 1
                                 stats['errors'].append(f"Page {current_page_num}, Job {job_idx}: {message}")
@@ -231,7 +357,7 @@ async def collect_all_servir_jobs():
                     
                     # Progress report
                     print(f"  ✓ Page complete")
-                    print(f"    Saved: {stats['jobs_saved']} | Skipped: {stats['jobs_skipped_duplicate']} | Failed: {stats['jobs_failed']}")
+                    print(f"    Saved: {stats['jobs_saved']} | Incomplete: {stats['jobs_saved_incomplete']} | Skipped: {stats['jobs_skipped_duplicate']} | Failed: {stats['jobs_failed']}")
                     print()
                     
                     # Move to next page if not last
@@ -272,7 +398,8 @@ async def collect_all_servir_jobs():
     print(f"\nScraping Statistics:")
     print(f"  Pages processed: {stats['pages_processed']}/{total_pages}")
     print(f"  Jobs encountered: {stats['jobs_encountered']}")
-    print(f"  Jobs saved: {stats['jobs_saved']}")
+    print(f"  Jobs saved (complete): {stats['jobs_saved']}")
+    print(f"  Jobs saved (incomplete): {stats['jobs_saved_incomplete']}")
     print(f"  Jobs skipped (duplicate): {stats['jobs_skipped_duplicate']}")
     print(f"  Jobs failed: {stats['jobs_failed']}")
     
