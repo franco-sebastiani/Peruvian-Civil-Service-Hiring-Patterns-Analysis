@@ -1,132 +1,146 @@
 """
 HTML parsing functions for extracting individual fields from SERVIR job postings.
 
-Uses Playwright locators instead of page.evaluate() for more reliable extraction
-and better page state management.
+Uses Playwright for reliable extraction and better page state management.
 """
 
 
-async def extract_simple_field(page, label_text):
+async def _extract_field_by_class(page, field_name, class_name):
     """
-    Extract fields that use the 'sub-titulo' label pattern.
+    Helper function to extract a field by searching for a specific class.
     
-    This pattern is used for basic job posting information like salary,
-    number of vacancies, publication dates, etc. The function finds a label
-    containing the specified text, then locates the corresponding value in
-    a 'detalle-sp' element nearby.
+    Searches for a span with the given class name that contains the field name,
+    then returns the text content of the next 'detalle-sp' sibling.
     
     Args:
         page: Playwright page object
-        label_text (str): The label text to search for (e.g., "Remuneración mensual")
+        field_name (str): The field to extract (e.g., "EXPERIENCIA", "REMUNERACIÓN")
+        class_name (str): The CSS class to search in (e.g., "sub-titulo", "sub-titulo-2")
     
     Returns:
         str or None: The extracted value, or None if not found
     """
     try:
-        # Find the label element containing the text
-        label = page.locator(f"text='{label_text}'").first
-        
-        # Get the closest .row container
-        container = await label.evaluate('el => el.closest(".row")')
-        
-        if not container:
-            return None
-        
-        # Look for detalle-sp within this container
-        detalle = page.locator('.detalle-sp').first
-        value = await detalle.text_content()
-        
-        return value.strip() if value else None
-        
-    except Exception as e:
-        return None
-
-
-async def extract_requirement_field(page, label_text):
-    """
-    Extract fields that use the 'sub-titulo-2' label pattern.
-    
-    This pattern is used for requirement fields like experience, education,
-    and specialization. The function finds a 'sub-titulo-2' element containing
-    the label text, then gets the next 'detalle-sp' sibling element.
-    
-    Args:
-        page: Playwright page object
-        label_text (str): The label text to search for (e.g., "Experiencia")
-    
-    Returns:
-        str or None: The extracted value, or None if not found
-    """
-    try:
-        # Find all sub-titulo-2 elements
-        labels = page.locator('.sub-titulo-2')
-        count = await labels.count()
-        
-        for i in range(count):
-            label = labels.nth(i)
-            text = await label.text_content()
-            
-            # Check if this label contains our target text
-            if label_text in text:
-                # Get the next element that is detalle-sp
-                # Navigate to parent, find next detalle-sp sibling
-                next_elem = await label.evaluate("""
-                    el => {
-                        let next = el.nextElementSibling;
-                        while (next) {
-                            if (next.classList.contains('detalle-sp')) {
-                                return next.textContent.trim();
-                            }
-                            next = next.nextElementSibling;
-                        }
-                        return null;
-                    }
-                """)
+        value = await page.evaluate(f"""
+            () => {{
+                // Find all spans with the specified class
+                let labels = document.querySelectorAll('span.{class_name}');
                 
-                if next_elem:
-                    return next_elem
+                for (let label of labels) {{
+                    // Normalize whitespace in label text (handles line breaks)
+                    let normalizedLabel = label.textContent.replace(/\s+/g, ' ').trim();
+                    
+                    // Check if this label contains our target field
+                    if (normalizedLabel.includes('{field_name}')) {{
+                        // Found the label, get the next detalle-sp sibling
+                        let next = label.nextElementSibling;
+                        while (next) {{
+                            if (next.classList && next.classList.contains('detalle-sp')) {{
+                                return next.textContent.trim();
+                            }}
+                            next = next.nextElementSibling;
+                        }}
+                    }}
+                }}
+                return null;
+            }}
+        """)
         
-        return None
+        return value
         
     except Exception as e:
         return None
 
 
-async def extract_special_fields(page):
+async def extract_simple_field(page, field_name):
     """
-    Extract fields that require custom logic and don't follow standard patterns.
+    Extract a simple field from the job details section.
     
-    These are fields that have unique HTML structures:
-    - Job title: uses 'sp-aviso0' class
-    - Institution: uses 'sp-aviso' class
-    - Posting unique ID: extracted from text containing 'N°'
+    Simple fields (salary, dates, vacancies, contract type) use the 'sub-titulo' class.
+    
+    Structure:
+    <span class="sub-titulo">REMUNERACIÓN: </span>
+    <span class="detalle-sp">S/. 1,400.00</span>
+    
+    Args:
+        page: Playwright page object
+        field_name (str): The field to extract (e.g., "REMUNERACIÓN", "CANTIDAD DE VACANTES")
+    
+    Returns:
+        str or None: The extracted value, or None if not found
+    """
+    return await _extract_field_by_class(page, field_name, "sub-titulo")
+
+
+async def extract_requirement_field(page, field_name):
+    """
+    Extract a requirement field from the REQUERIMIENTO section.
+    
+    Requirement fields (experience, education, specialization, etc.) use the 'sub-titulo-2' class.
+    
+    Structure:
+    <li><span class="sub-titulo-2">EXPERIENCIA:</span><span class="detalle-sp">2 AÑOS</span></li>
+    
+    Args:
+        page: Playwright page object
+        field_name (str): The requirement field to extract (e.g., "EXPERIENCIA", "CONOCIMIENTO")
+    
+    Returns:
+        str or None: The extracted value, or None if not found
+    """
+    return await _extract_field_by_class(page, field_name, "sub-titulo-2")
+
+
+async def extract_job_title(page):
+    """
+    Extract the job title from the detail page.
+    
+    Uses the 'sp-aviso0' span class.
     
     Args:
         page: Playwright page object
     
     Returns:
-        dict: Dictionary with keys 'job_title', 'institution', 'posting_unique_id'
-              Values are strings or None if not found
+        str or None: The job title, or None if not found
     """
-    special_data = {}
-    
-    # Extract job title
     try:
         job_title_elem = page.locator('span.sp-aviso0').first
         job_title = await job_title_elem.text_content()
-        special_data["job_title"] = job_title.strip() if job_title else None
+        return job_title.strip() if job_title else None
     except Exception:
-        special_data["job_title"] = None
+        return None
+
+
+async def extract_institution(page):
+    """
+    Extract the institution name from the detail page.
     
-    # Extract institution name
+    Uses the 'sp-aviso' span class.
+    
+    Args:
+        page: Playwright page object
+    
+    Returns:
+        str or None: The institution name, or None if not found
+    """
     try:
         institution_elem = page.locator('span.sp-aviso').first
         institution = await institution_elem.text_content()
-        special_data["institution"] = institution.strip() if institution else None
+        return institution.strip() if institution else None
     except Exception:
-        special_data["institution"] = None
+        return None
+
+
+async def extract_posting_unique_id(page):
+    """
+    Extract the posting unique ID (N°) from the detail page.
     
-    # Extract posting unique ID (the N° field)
+    Args:
+        page: Playwright page object
+    
+    Returns:
+        str or None: The posting ID (numeric), or None if not found
+    """
     try:
         posting_id = await page.evaluate("""
             () => {
@@ -140,8 +154,6 @@ async def extract_special_fields(page):
                 return null;
             }
         """)
-        special_data["posting_unique_id"] = posting_id
+        return posting_id
     except Exception:
-        special_data["posting_unique_id"] = None
-    
-    return special_data
+        return None
