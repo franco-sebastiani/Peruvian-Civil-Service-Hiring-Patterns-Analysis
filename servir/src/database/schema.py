@@ -76,6 +76,84 @@ def create_job_postings_table():
         close_connection(conn)
 
 
+def create_job_postings_incomplete_table():
+    """
+    Create the job_postings_incomplete table if it doesn't exist.
+    
+    This table stores job postings that failed extraction (missing fields).
+    Allows tracking of incomplete data and manual fixes applied.
+    
+    Table Structure:
+    ---------------
+    - id: INTEGER PRIMARY KEY (auto-incrementing)
+    - posting_unique_id: TEXT UNIQUE NOT NULL (SERVIR job ID)
+    - job_title: TEXT (may be None)
+    - institution: TEXT (may be None)
+    - monthly_salary: TEXT (may be None)
+    - number_of_vacancies: TEXT (may be None)
+    - posting_start_date: TEXT (may be None)
+    - posting_end_date: TEXT (may be None)
+    - contract_type_raw: TEXT (may be None)
+    - experience_requirements: TEXT (may be None)
+    - academic_profile: TEXT (may be None)
+    - specialization: TEXT (may be None)
+    - knowledge: TEXT (may be None)
+    - competencies: TEXT (may be None)
+    - missing_fields: TEXT (comma-separated list of None fields, e.g., "monthly_salary,number_of_vacancies")
+    - reviewed: BOOLEAN (have you manually reviewed and fixed this?)
+    - manually_fixed_fields: TEXT (comma-separated list of fields you manually filled in)
+    - notes: TEXT (optional notes about why it was incomplete or how you fixed it)
+    - scraped_at: TIMESTAMP NOT NULL (when data was collected)
+    - reviewed_at: TIMESTAMP (when you reviewed/fixed it)
+    
+    Returns:
+        bool: True if table created/exists, False if error occurred
+    """
+    conn = get_connection()
+    
+    if not conn:
+        print("Failed to connect to database for table creation")
+        return False
+    
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS job_postings_incomplete (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                posting_unique_id TEXT UNIQUE NOT NULL,
+                job_title TEXT,
+                institution TEXT,
+                monthly_salary TEXT,
+                number_of_vacancies TEXT,
+                posting_start_date TEXT,
+                posting_end_date TEXT,
+                contract_type_raw TEXT,
+                experience_requirements TEXT,
+                academic_profile TEXT,
+                specialization TEXT,
+                knowledge TEXT,
+                competencies TEXT,
+                missing_fields TEXT NOT NULL,
+                reviewed BOOLEAN DEFAULT FALSE,
+                manually_fixed_fields TEXT,
+                notes TEXT,
+                scraped_at TIMESTAMP NOT NULL,
+                reviewed_at TIMESTAMP
+            )
+        """)
+        
+        conn.commit()
+        return True
+        
+    except Exception as e:
+        print(f"Error creating job_postings_incomplete table: {e}")
+        return False
+        
+    finally:
+        close_connection(conn)
+
+
 def initialize_database():
     """
     Initialize the complete database schema.
@@ -85,9 +163,8 @@ def initialize_database():
     to ensure the database is ready.
     
     Currently creates:
-    - job_postings table
-    
-    Future tables can be added here as the project expands.
+    - job_postings table (complete jobs)
+    - job_postings_incomplete table (jobs missing fields for manual review)
     
     Returns:
         bool: True if initialization successful, False otherwise
@@ -101,9 +178,10 @@ def initialize_database():
     """
     print("Initializing database...")
     
-    success = create_job_postings_table()
+    success1 = create_job_postings_table()
+    success2 = create_job_postings_incomplete_table()
     
-    if success:
+    if success1 and success2:
         print("Database initialized successfully")
         return True
     else:
