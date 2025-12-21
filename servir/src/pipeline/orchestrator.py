@@ -13,8 +13,8 @@ from servir.src.pipeline.navigator import get_total_pages, get_jobs_on_current_p
 from servir.src.pipeline.job_processor import extract_job_with_retry, decide_job_action
 from servir.src.pipeline.statistics import PipelineStats
 from servir.src.database.schema import initialize_database
-from servir.src.database.operations import insert_job_offer, insert_job_offer_incomplete, job_exists
-from servir.src.database.queries import get_job_count
+from servir.src.database.operations import insert_job_offer, insert_job_offer_incomplete
+from servir.src.database.queries import get_job_count, job_exists
 
 
 async def collect_all_servir_jobs():
