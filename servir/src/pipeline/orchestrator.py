@@ -97,6 +97,7 @@ async def collect_all_servir_jobs():
                 
                 # Process each job on this page
                 for job_idx in job_indices:
+                    job_number = job_idx + 1  # Convert 0-indexed to 1-indexed for display
                     stats.record_job_encountered()
                     
                     # Extract job with retry
@@ -105,14 +106,14 @@ async def collect_all_servir_jobs():
                     # Decide what to do with the job
                     decision = decide_job_action(job_data, is_valid, current_page, job_idx)
                     
-                    # Determine status message
-                    status = ""
+                    # Determine outcome
+                    outcome = ""
                     
                     # Execute decision
                     if decision['action'] == 'failed':
                         stats.record_failed()
                         stats.record_error(decision['message'])
-                        status = "FAILED"
+                        outcome = "[FAILED]"
                     
                     elif decision['action'] == 'ready_to_save_complete':
                         posting_id = decision['posting_id']
@@ -120,11 +121,11 @@ async def collect_all_servir_jobs():
                         # Check for duplicate
                         if job_exists(posting_id):
                             stats.record_duplicate()
-                            status = "DUPLICATE"
+                            outcome = "[DUPLICATE]"
                             
                             # Stop if we hit consecutive duplicates threshold
                             if stats.consecutive_duplicates >= CONSECUTIVE_DUPLICATES_THRESHOLD:
-                                print(f"\n    Job {job_idx}: {status}")
+                                print(f"    Job {job_number}: {outcome}")
                                 print(f"\n  Reached previous collection point ({CONSECUTIVE_DUPLICATES_THRESHOLD} duplicates).")
                                 print(f"  Stopping to avoid wasting resources.\n")
                                 
@@ -140,11 +141,11 @@ async def collect_all_servir_jobs():
                             success, msg = insert_job_offer(decision['data'])
                             if success:
                                 stats.record_job_saved_complete()
-                                status = "SAVED (complete)"
+                                outcome = "[OK]"
                             else:
                                 stats.record_failed()
                                 stats.record_error(msg)
-                                status = "FAILED"
+                                outcome = "[FAILED]"
                     
                     elif decision['action'] == 'ready_to_save_incomplete':
                         # Save incomplete job for manual review
@@ -154,13 +155,13 @@ async def collect_all_servir_jobs():
                         )
                         if success:
                             stats.record_job_saved_incomplete()
-                            status = "SAVED (incomplete)"
+                            outcome = "[INCOMPLETE]"
                         else:
                             stats.record_failed()
                             stats.record_error(msg)
-                            status = "FAILED"
+                            outcome = "[FAILED]"
                     
-                    print(f"    Job {job_idx}: {status}")
+                    print(f"    Job {job_number}: {outcome}")
                 
                 stats.record_page_processed()
                 print(f"  ✓ Complete\n")
