@@ -8,7 +8,7 @@ Contains the core collection loop.
 from datetime import datetime
 from playwright.async_api import async_playwright
 
-from servir.config import SERVIR_URL, CONSECUTIVE_DUPLICATES_THRESHOLD
+from servir.src.config.config import SERVIR_URL, CONSECUTIVE_DUPLICATES_THRESHOLD
 from servir.src.pipeline.navigator import get_total_pages, get_jobs_on_current_page, navigate_next_page
 from servir.src.pipeline.job_processor import extract_job_with_retry, decide_job_action
 from servir.src.pipeline.statistics import PipelineStats
@@ -113,7 +113,7 @@ async def collect_all_servir_jobs():
                     if decision['action'] == 'failed':
                         stats.record_failed()
                         stats.record_error(decision['message'])
-                        outcome = "[FAILED]"
+                        outcome = f"[FAILED] {decision['message'].split(': ', 1)[-1]}"
                     
                     elif decision['action'] == 'ready_to_save_complete':
                         posting_id = decision['posting_id']
@@ -145,7 +145,7 @@ async def collect_all_servir_jobs():
                             else:
                                 stats.record_failed()
                                 stats.record_error(msg)
-                                outcome = "[FAILED]"
+                                outcome = f"[FAILED] {msg}"
                     
                     elif decision['action'] == 'ready_to_save_incomplete':
                         # Save incomplete job for manual review
@@ -159,7 +159,7 @@ async def collect_all_servir_jobs():
                         else:
                             stats.record_failed()
                             stats.record_error(msg)
-                            outcome = "[FAILED]"
+                            outcome = f"[FAILED] {msg}"
                     
                     print(f"    Job {job_number}: {outcome}")
                 
