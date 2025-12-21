@@ -5,7 +5,7 @@ This module assembles complete job offer data by coordinating field extraction
 functions and field configuration.
 """
 
-from servir.config.field_definitions import SIMPLE_FIELDS, REQUIREMENT_FIELDS, FIELD_ORDER
+from servir.src.config.config import SIMPLE_FIELDS, REQUIREMENT_FIELDS, FIELD_ORDER
 from servir.src.extractors.field_extractors import (
     extract_simple_field,
     extract_requirement_field,
