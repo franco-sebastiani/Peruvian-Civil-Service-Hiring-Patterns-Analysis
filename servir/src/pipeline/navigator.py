@@ -5,7 +5,7 @@ Handles all page movement and job discovery on SERVIR portal.
 """
 
 import re
-from servir.config import NAVIGATION_TIMEOUT, PAGE_LOAD_WAIT
+from servir.src.config import NAVIGATION_TIMEOUT, PAGE_LOAD_WAIT
 
 
 async def get_total_pages(page):
