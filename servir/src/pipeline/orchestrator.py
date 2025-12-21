@@ -113,7 +113,9 @@ async def collect_all_servir_jobs():
                     if decision['action'] == 'failed':
                         stats.record_failed()
                         stats.record_error(decision['message'])
-                        outcome = f"[FAILED] {decision['message'].split(': ', 1)[-1]}"
+                        posting_id = decision['posting_id']
+                        id_str = f" ({posting_id})" if posting_id else ""
+                        outcome = f"[FAILED] {decision['message'].split(': ', 1)[-1]}{id_str}"
                     
                     elif decision['action'] == 'ready_to_save_complete':
                         posting_id = decision['posting_id']
