@@ -35,10 +35,9 @@ def discover_salary_patterns():
     # Categories for results
     successful = []
     parse_failures = defaultdict(list)  # Group by error message
-    invalid_range = defaultdict(list)   # Group by validation error
     
     # Process each job's salary
-    print("Analyzing salaries...\n")
+    print("Analyzing salaries (focus on cleaning patterns only)...\n")
     
     for job in jobs:
         posting_id = job.get('posting_unique_id')
@@ -47,66 +46,48 @@ def discover_salary_patterns():
         # Try to transform
         result = transform_salary(salary_str)
         
-        if result['is_valid']:
+        if result['salary_amount'] is not None:
+            # Successfully parsed (cleaning worked)
             successful.append({
                 'posting_id': posting_id,
                 'raw': salary_str,
                 'amount': result['salary_amount']
             })
-        elif 'parse' in result['error'].lower():
+        else:
+            # Failed to parse (cleaning didn't work)
             parse_failures[result['error']].append({
                 'posting_id': posting_id,
                 'raw': salary_str
             })
-        else:
-            invalid_range[result['error']].append({
-                'posting_id': posting_id,
-                'raw': salary_str,
-                'amount': result['salary_amount']
-            })
     
-    # Print report
+    total = len(jobs)
     print("="*70)
     print("RESULTS")
     print("="*70)
     
-    total = len(jobs)
     print(f"\nTotal salaries analyzed: {total}")
-    print(f"Successfully transformed: {len(successful)} ({100*len(successful)/total:.1f}%)")
-    print(f"Parse failures: {sum(len(v) for v in parse_failures.values())}")
-    print(f"Invalid range: {sum(len(v) for v in invalid_range.values())}")
+    print(f"Successfully cleaned: {len(successful)} ({100*len(successful)/total:.1f}%)")
+    print(f"Parse failures (cleaning issues): {sum(len(v) for v in parse_failures.values())}")
     
     # Parse failures detail
     if parse_failures:
         print("\n" + "-"*70)
-        print("PARSE FAILURES (Could not extract number)")
+        print("PARSE FAILURES (Cleaning didn't work)")
         print("-"*70)
         for error, examples in parse_failures.items():
             print(f"\n{error} ({len(examples)} cases)")
             for ex in examples[:5]:
-                print(f"  ID: {ex['posting_id']}, Raw: {ex['raw']}")
-            if len(examples) > 5:
-                print(f"  ... and {len(examples) - 5} more")
-    
-    # Invalid range detail
-    if invalid_range:
-        print("\n" + "-"*70)
-        print("INVALID RANGE (Outside bounds)")
-        print("-"*70)
-        for error, examples in invalid_range.items():
-            print(f"\n{error} ({len(examples)} cases)")
-            for ex in examples[:5]:
-                print(f"  ID: {ex['posting_id']}, Raw: {ex['raw']}, Amount: {ex['amount']}")
+                print(f"  ID: {ex['posting_id']}, Raw: '{ex['raw']}'")
             if len(examples) > 5:
                 print(f"  ... and {len(examples) - 5} more")
     
     # Sample of successful transformations
     if successful:
         print("\n" + "-"*70)
-        print("SAMPLE SUCCESSFUL TRANSFORMATIONS")
+        print("SAMPLE SUCCESSFUL CLEANINGS")
         print("-"*70)
         for ex in successful[:10]:
-            print(f"  {ex['raw']} → {ex['amount']}")
+            print(f"  '{ex['raw']}' → {ex['amount']}")
         if len(successful) > 10:
             print(f"  ... and {len(successful) - 10} more successful")
     
@@ -114,8 +95,7 @@ def discover_salary_patterns():
     
     return {
         'successful': len(successful),
-        'parse_failures': dict(parse_failures),
-        'invalid_range': dict(invalid_range)
+        'parse_failures': dict(parse_failures)
     }
 
 
