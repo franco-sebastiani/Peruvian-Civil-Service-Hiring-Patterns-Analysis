@@ -7,7 +7,7 @@ All functions return (success, message) tuples for clear error handling.
 
 import sqlite3
 from datetime import datetime
-from servir.src.database.connection import get_connection, close_connection
+from servir.src.collecting.database.connection import get_connection, close_connection
 
 
 def insert_job_offer(job_data):
