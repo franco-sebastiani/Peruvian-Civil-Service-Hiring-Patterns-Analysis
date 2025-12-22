@@ -1,56 +1,123 @@
-import asyncio
-from playwright.async_api import async_playwright
-from servir.src.extractors.job_assembler import assemble_job_offer
+"""
+Salary discovery script for data quality audit.
+
+Analyzes raw salaries from collection database to find parsing patterns.
+Identifies which salaries can be transformed and which need special handling.
+"""
+
+from collections import defaultdict
+from servir.src.processing.transformers.salary_transform import transform_salary
+from servir.src.collecting.database.queries import get_all_jobs
 
 
-async def test_job_assembler():
-    """Test the complete job assembler on a live SERVIR job"""
+def discover_salary_patterns():
+    """
+    Analyze all raw salaries to identify transformation patterns.
     
-    async with async_playwright() as p:
-        browser = await p.firefox.launch()
-        page = await browser.new_page()
+    Returns:
+        dict: Statistics and examples of salary patterns
+    """
+    
+    print("\n" + "="*70)
+    print("SALARY DISCOVERY AUDIT")
+    print("="*70 + "\n")
+    
+    # Fetch all jobs from collection database
+    print("Reading salaries from collection database...")
+    jobs = get_all_jobs()
+    
+    if not jobs:
+        print("No jobs found in collection database.")
+        return None
+    
+    print(f"Found {len(jobs)} jobs\n")
+    
+    # Categories for results
+    successful = []
+    parse_failures = defaultdict(list)  # Group by error message
+    invalid_range = defaultdict(list)   # Group by validation error
+    
+    # Process each job's salary
+    print("Analyzing salaries...\n")
+    
+    for job in jobs:
+        posting_id = job.get('posting_unique_id')
+        salary_str = job.get('monthly_salary')
         
-        # Navigate to job listing
-        url = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
-        await page.goto(url, wait_until="networkidle")
-        await page.wait_for_timeout(3000)
+        # Try to transform
+        result = transform_salary(salary_str)
         
-        # Click first job to open detail page
-        buttons = await page.locator('button:has-text("Ver más")').all()
-        await buttons[0].click()
-        await page.wait_for_timeout(2000)
-        
-        # Assemble the complete job offer
-        print("\n" + "=" * 70)
-        print("ASSEMBLED JOB OFFER")
-        print("=" * 70)
-        
-        job_data = await assemble_job_offer(page)
-        
-        # Display all fields
-        for key, value in job_data.items():
-            if value is not None:
-                # Truncate long values for readability
-                display_value = str(value)[:60] + "..." if len(str(value)) > 60 else value
-                print(f"{key}: {display_value}")
-            else:
-                print(f"{key}: None")
-        
-        print("\n" + "=" * 70)
-        print("SUMMARY")
-        print("=" * 70)
-        
-        total_fields = len(job_data)
-        filled_fields = sum(1 for v in job_data.values() if v is not None)
-        
-        print(f"Total fields: {total_fields}")
-        print(f"Filled fields: {filled_fields}")
-        print(f"Empty fields: {total_fields - filled_fields}")
-        
-        print("\n" + "=" * 70)
-        
-        await browser.close()
+        if result['is_valid']:
+            successful.append({
+                'posting_id': posting_id,
+                'raw': salary_str,
+                'amount': result['salary_amount']
+            })
+        elif 'parse' in result['error'].lower():
+            parse_failures[result['error']].append({
+                'posting_id': posting_id,
+                'raw': salary_str
+            })
+        else:
+            invalid_range[result['error']].append({
+                'posting_id': posting_id,
+                'raw': salary_str,
+                'amount': result['salary_amount']
+            })
+    
+    # Print report
+    print("="*70)
+    print("RESULTS")
+    print("="*70)
+    
+    total = len(jobs)
+    print(f"\nTotal salaries analyzed: {total}")
+    print(f"Successfully transformed: {len(successful)} ({100*len(successful)/total:.1f}%)")
+    print(f"Parse failures: {sum(len(v) for v in parse_failures.values())}")
+    print(f"Invalid range: {sum(len(v) for v in invalid_range.values())}")
+    
+    # Parse failures detail
+    if parse_failures:
+        print("\n" + "-"*70)
+        print("PARSE FAILURES (Could not extract number)")
+        print("-"*70)
+        for error, examples in parse_failures.items():
+            print(f"\n{error} ({len(examples)} cases)")
+            for ex in examples[:5]:
+                print(f"  ID: {ex['posting_id']}, Raw: {ex['raw']}")
+            if len(examples) > 5:
+                print(f"  ... and {len(examples) - 5} more")
+    
+    # Invalid range detail
+    if invalid_range:
+        print("\n" + "-"*70)
+        print("INVALID RANGE (Outside bounds)")
+        print("-"*70)
+        for error, examples in invalid_range.items():
+            print(f"\n{error} ({len(examples)} cases)")
+            for ex in examples[:5]:
+                print(f"  ID: {ex['posting_id']}, Raw: {ex['raw']}, Amount: {ex['amount']}")
+            if len(examples) > 5:
+                print(f"  ... and {len(examples) - 5} more")
+    
+    # Sample of successful transformations
+    if successful:
+        print("\n" + "-"*70)
+        print("SAMPLE SUCCESSFUL TRANSFORMATIONS")
+        print("-"*70)
+        for ex in successful[:10]:
+            print(f"  {ex['raw']} → {ex['amount']}")
+        if len(successful) > 10:
+            print(f"  ... and {len(successful) - 10} more successful")
+    
+    print("\n" + "="*70 + "\n")
+    
+    return {
+        'successful': len(successful),
+        'parse_failures': dict(parse_failures),
+        'invalid_range': dict(invalid_range)
+    }
 
 
 if __name__ == "__main__":
-    asyncio.run(test_job_assembler())
+    discover_salary_patterns()
