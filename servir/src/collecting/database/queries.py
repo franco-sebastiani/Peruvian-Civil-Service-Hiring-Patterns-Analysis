@@ -6,7 +6,7 @@ counting, and analytics. No write operations are performed here.
 """
 
 import sqlite3
-from servir.src.database.connection import get_connection, close_connection
+from servir.src.collecting.database.connection import get_connection, close_connection
 
 
 def job_exists(posting_unique_id):
@@ -38,7 +38,7 @@ def job_exists(posting_unique_id):
         return count > 0
         
     except Exception as e:
-        print(f"✗ Error checking if job exists: {e}")
+        print(f"  Error checking if job exists: {e}")
         return False
         
     finally:
@@ -66,7 +66,7 @@ def get_job_count():
         return count
         
     except Exception as e:
-        print(f"✗ Error counting jobs: {e}")
+        print(f"  Error counting jobs: {e}")
         return 0
         
     finally:
@@ -103,7 +103,7 @@ def get_job_by_id(posting_unique_id):
         return dict(row) if row else None
         
     except Exception as e:
-        print(f"✗ Error retrieving job: {e}")
+        print(f"  Error retrieving job: {e}")
         return None
         
     finally:
@@ -141,7 +141,7 @@ def get_all_jobs(limit=None):
         return [dict(row) for row in rows]
         
     except Exception as e:
-        print(f"✗ Error retrieving all jobs: {e}")
+        print(f"  Error retrieving all jobs: {e}")
         return []
         
     finally:
@@ -180,7 +180,7 @@ def get_jobs_by_institution(institution_name):
         return [dict(row) for row in rows]
         
     except Exception as e:
-        print(f"✗ Error retrieving jobs by institution: {e}")
+        print(f"  Error retrieving jobs by institution: {e}")
         return []
         
     finally:
@@ -218,7 +218,7 @@ def get_institution_counts():
         return results
         
     except Exception as e:
-        print(f"✗ Error getting institution counts: {e}")
+        print(f"  Error getting institution counts: {e}")
         return []
         
     finally:
@@ -255,7 +255,7 @@ def get_recent_jobs(days=7):
         return [dict(row) for row in rows]
         
     except Exception as e:
-        print(f"✗ Error retrieving recent jobs: {e}")
+        print(f"  Error retrieving recent jobs: {e}")
         return []
         
     finally:
