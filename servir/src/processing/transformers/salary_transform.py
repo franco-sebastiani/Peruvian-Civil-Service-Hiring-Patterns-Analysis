@@ -20,7 +20,6 @@ def transform_salary(salary_str):
             'is_valid': bool,
             'error': str or None
         }
-    
     """
     
     # Handle None or empty input
