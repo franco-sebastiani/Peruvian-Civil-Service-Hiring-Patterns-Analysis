@@ -6,7 +6,7 @@ Identifies which salaries can be transformed and which need special handling.
 """
 
 from collections import defaultdict
-from servir.src.processing.transformers.salary_transform import transform_salary
+from servir.src.processing.parsers.salary_parser import transform_salary
 from servir.src.collecting.database.queries import get_all_jobs
 
 
