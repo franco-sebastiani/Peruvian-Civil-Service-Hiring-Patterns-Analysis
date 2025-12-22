@@ -21,18 +21,24 @@ def get_db_path():
     Raises:
         OSError: If unable to create directory structure
     """
+    
     try:
-        # Navigate from database/ folder up to servir/ root, then to data/raw/
-        db_path = Path(__file__).parent.parent.parent / "data" / "raw" / "servir_jobs.db"
+        # Navigate from src/collection/database/ up to servir/ root, then to data/raw/
+        # __file__ = servir/src/collection/database/connection.py
+        # parent = servir/src/collection/database/
+        # parent.parent = servir/src/collection/
+        # parent.parent.parent = servir/src/
+        # parent.parent.parent.parent = servir/
+        db_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "servir_jobs.db"
         
-        # Create directories if they don't exist
+        print(f"DEBUG: Attempting to connect to: {db_path}")
+        print(f"DEBUG: File exists: {db_path.exists()}")
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
         return db_path
-        
     except OSError as e:
         print(f"Error creating database directory: {e}")
-        raise  # Re-raise the error so caller knows it failed
+        raise
 
 
 def get_connection():
