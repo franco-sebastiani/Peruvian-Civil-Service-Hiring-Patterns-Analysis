@@ -126,18 +126,18 @@ async def collect_all_servir_jobs():
                             outcome = "[DUPLICATE]"
                             
                             # Consecutive duplicates detection (disabled)
-                            # if stats.consecutive_duplicates >= CONSECUTIVE_DUPLICATES_THRESHOLD:
-                            #     print(f"    Job {job_number}: {outcome}")
-                            #     print(f"\n  Reached previous collection point ({CONSECUTIVE_DUPLICATES_THRESHOLD} duplicates).")
-                            #     print(f"  Stopping to avoid wasting resources.\n")
-                            #     
-                            #     stats.finish()
-                            #     await browser.close()
-                            #     
-                            #     final_count = get_job_count()
-                            #     stats.print_summary(initial_count, final_count)
-                            #     
-                            #     return stats
+                            if stats.consecutive_duplicates >= CONSECUTIVE_DUPLICATES_THRESHOLD:
+                                print(f"    Job {job_number}: {outcome}")
+                                print(f"\n  Reached previous collection point ({CONSECUTIVE_DUPLICATES_THRESHOLD} duplicates).")
+                                print(f"  Stopping to avoid wasting resources.\n")
+                                
+                                stats.finish()
+                                await browser.close()
+                                
+                                final_count = get_job_count()
+                                stats.print_summary(initial_count, final_count)
+                                
+                                return stats
                         else:
                             # Save to database
                             success, msg = insert_job_offer(decision['data'])
