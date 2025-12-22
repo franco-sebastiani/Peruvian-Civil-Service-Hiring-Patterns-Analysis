@@ -1,21 +1,21 @@
 from collections import defaultdict
-from servir.src.processing.parsers.vacancy_parser import transform_vacancy
+from servir.src.processing.parsers.date_parser import transform_date
 from servir.src.collecting.database.queries import get_all_jobs
 
 
-def discover_vacancy_patterns():
+def discover_date_patterns():
     """
-    Analyze all raw vacancies to identify parsing patterns.
+    Analyze all raw dates to identify parsing patterns.
     
     Returns:
-        dict: Statistics and examples of vacancy patterns
+        dict: Statistics and examples of date patterns
     """
     
     print("\n" + "="*70)
-    print("VACANCY DISCOVERY AUDIT")
+    print("DATE DISCOVERY AUDIT")
     print("="*70 + "\n")
     
-    print("Reading vacancies from collection database...")
+    print("Reading dates from collection database...")
     jobs = get_all_jobs()
     
     if not jobs:
@@ -27,33 +27,45 @@ def discover_vacancy_patterns():
     successful = []
     parse_failures = defaultdict(list)
     
-    print("Analyzing vacancies (focus on parsing patterns only)...\n")
+    print("Analyzing dates (focus on parsing patterns only)...\n")
     
     for job in jobs:
         posting_id = job.get('posting_unique_id')
-        vacancy_str = job.get('number_of_vacancies')
+        start_date_str = job.get('posting_start_date')
+        end_date_str = job.get('posting_end_date')
         
-        result = transform_vacancy(vacancy_str)
+        # Parse start date
+        start_result = transform_date(start_date_str)
+        # Parse end date
+        end_result = transform_date(end_date_str)
         
-        if result['vacancy_count'] is not None:
+        if start_result['date_iso'] is not None and end_result['date_iso'] is not None:
             successful.append({
                 'posting_id': posting_id,
-                'raw': vacancy_str,
-                'count': result['vacancy_count']
+                'start_raw': start_date_str,
+                'start_iso': start_result['date_iso'],
+                'end_raw': end_date_str,
+                'end_iso': end_result['date_iso']
             })
         else:
-            parse_failures[result['error']].append({
-                'posting_id': posting_id,
-                'raw': vacancy_str
-            })
+            if start_result['date_iso'] is None:
+                parse_failures[f"Start: {start_result['error']}"].append({
+                    'posting_id': posting_id,
+                    'raw': start_date_str
+                })
+            if end_result['date_iso'] is None:
+                parse_failures[f"End: {end_result['error']}"].append({
+                    'posting_id': posting_id,
+                    'raw': end_date_str
+                })
     
     total = len(jobs)
     print("="*70)
     print("RESULTS")
     print("="*70)
     
-    print(f"\nTotal vacancies analyzed: {total}")
-    print(f"Successfully parsed: {len(successful)} ({100*len(successful)/total:.1f}%)")
+    print(f"\nTotal dates analyzed: {total * 2}")
+    print(f"Successfully parsed: {len(successful) * 2} ({100*len(successful)/total:.1f}%)")
     print(f"Parse failures: {sum(len(v) for v in parse_failures.values())}")
     
     if parse_failures:
@@ -71,10 +83,11 @@ def discover_vacancy_patterns():
         print("\n" + "-"*70)
         print("SAMPLE SUCCESSFUL PARSINGS")
         print("-"*70)
-        for ex in successful[:10]:
-            print(f"  '{ex['raw']}' → {ex['count']}")
-        if len(successful) > 10:
-            print(f"  ... and {len(successful) - 10} more successful")
+        for ex in successful[:5]:
+            print(f"  Start: '{ex['start_raw']}' → {ex['start_iso']}")
+            print(f"  End:   '{ex['end_raw']}' → {ex['end_iso']}")
+        if len(successful) > 5:
+            print(f"  ... and {len(successful) - 5} more successful")
     
     print("\n" + "="*70 + "\n")
     
@@ -85,4 +98,4 @@ def discover_vacancy_patterns():
 
 
 if __name__ == "__main__":
-    discover_vacancy_patterns()
+    discover_date_patterns()
