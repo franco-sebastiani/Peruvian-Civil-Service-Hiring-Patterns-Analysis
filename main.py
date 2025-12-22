@@ -10,7 +10,7 @@ import sys
 
 async def main():
     """Run the SERVIR data collection pipeline."""
-    from servir.src.pipeline.orchestrator import collect_all_servir_jobs
+    from servir.src.collecting.pipeline.orchestrator import collect_all_servir_jobs
     
     try:
         await collect_all_servir_jobs()
