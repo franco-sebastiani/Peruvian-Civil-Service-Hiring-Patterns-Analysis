@@ -5,7 +5,7 @@ Handles extracting one job's details from the detail page,
 then returning to the listing page.
 """
 
-from servir.src.extractors.job_assembler import assemble_job_offer
+from servir.src.collecting.extractors.job_assembler import assemble_job_offer
 
 
 SERVIR_LISTING_URL = "https://app.servir.gob.pe/DifusionOfertasExterno/faces/consultas/ofertas_laborales.xhtml"
