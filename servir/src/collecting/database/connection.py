@@ -31,8 +31,6 @@ def get_db_path():
         # parent.parent.parent.parent = servir/
         db_path = Path(__file__).parent.parent.parent.parent / "data" / "raw" / "servir_jobs.db"
         
-        print(f"DEBUG: Attempting to connect to: {db_path}")
-        print(f"DEBUG: File exists: {db_path.exists()}")
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
         return db_path
