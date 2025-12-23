@@ -1,15 +1,16 @@
 """
 Text parser for processing phase.
 
-Cleans text fields: trim whitespace, remove extra spaces, fix encoding.
+Cleans text fields: trim whitespace, remove quotes, remove bullets/dashes, fix spacing.
 """
 
+import re
 from servir.src.processing.config.text_config import TEXT_CLEANING_RULES
 
 
 def transform_text(text_str):
     """
-    Clean raw text string by removing whitespace and fixing formatting.
+    Clean raw text string by removing whitespace, quotes, and bullet points.
     
     Uses rules defined in config/text_rules.py.
     
@@ -20,17 +21,6 @@ def transform_text(text_str):
         dict: {
             'text': str or None,
             'error': str or None
-        }
-    
-    Examples:
-        transform_text("  Some Text  ") → {
-            'text': 'Some Text',
-            'error': None
-        }
-        
-        transform_text("Text  with   extra    spaces") → {
-            'text': 'Text with extra spaces',
-            'error': None
         }
     """
     
@@ -48,7 +38,16 @@ def transform_text(text_str):
         if TEXT_CLEANING_RULES['trim']:
             cleaned = cleaned.strip()
         
+        # Remove quotes (leading and trailing)
+        cleaned = cleaned.strip('"\'')
+        
+        # Remove leading bullets/dashes
+        # Matches: "- ", "• ", "* " at start of lines
+        cleaned = re.sub(r'^[\s\-•*]+', '', cleaned, flags=re.MULTILINE)
+        cleaned = cleaned.strip()
+        
         if TEXT_CLEANING_RULES['remove_extra_spaces']:
+            # Replace multiple spaces with single space
             cleaned = ' '.join(cleaned.split())
         
         # Handle empty result after cleaning
