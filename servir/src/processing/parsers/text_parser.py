@@ -62,8 +62,8 @@ def transform_text(text_str):
         # Handle empty result after cleaning
         if not cleaned:
             return {
-                'text': None,
-                'error': 'Text is empty after cleaning'
+                'text': 'NO INFO',
+                'error': None
             }
         
         return {
