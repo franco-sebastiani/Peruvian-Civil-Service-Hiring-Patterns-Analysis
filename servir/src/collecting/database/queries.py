@@ -6,7 +6,7 @@ counting, and analytics. No write operations are performed here.
 """
 
 import sqlite3
-from servir.data.connection import get_connection, close_connection
+from servir.src.database.connection import get_connection, close_connection
 
 
 def job_exists(posting_unique_id):
