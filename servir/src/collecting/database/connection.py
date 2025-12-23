@@ -48,15 +48,6 @@ def get_connection():
     
     Returns:
         sqlite3.Connection: Active database connection object, or None if connection failed
-    
-    Example:
-        conn = get_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM job_postings")
-            close_connection(conn)
-        else:
-            print("Failed to connect to database")
     """
     try:
         db_path = get_db_path()
@@ -78,11 +69,6 @@ def close_connection(conn):
     
     Args:
         conn (sqlite3.Connection): Connection object to close
-    
-    Example:
-        conn = get_connection()
-        # ... do database operations ...
-        close_connection(conn)
     """
     if conn:
         try:
