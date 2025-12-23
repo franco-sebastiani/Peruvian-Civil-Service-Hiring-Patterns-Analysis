@@ -5,7 +5,7 @@ Defines table structures and handles schema initialization.
 This module is responsible for creating and maintaining the database structure.
 """
 
-from servir.src.database.connection import get_connection, close_connection
+from servir.src.collecting.database.connection import get_connection, close_connection
 
 
 def create_job_postings_table():
