@@ -9,11 +9,17 @@ import sys
 
 
 async def main():
-    """Run collection or processing pipeline based on argument."""
+    """Run collection or processing pipeline based on user input."""
     
-    mode = sys.argv[1] if len(sys.argv) > 1 else "process"
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+    else:
+        print("\nWhat do you want to do?")
+        print("1. collect  - Scrape SERVIR job postings")
+        print("2. process  - Clean and process data")
+        mode = input("\nEnter option (collect/process): ").strip().lower()
     
-    if mode == "collect":
+    if mode == "collect" or mode == "1":
         from servir.src.collecting.pipeline.orchestrator import collect_all_servir_jobs
         try:
             await collect_all_servir_jobs()
@@ -21,12 +27,12 @@ async def main():
             print("\n\nInterrupted by user.")
             sys.exit(0)
         except Exception as e:
-            print(f"\n  Error: {e}")
+            print(f"\nError: {e}")
             import traceback
             traceback.print_exc()
             sys.exit(1)
     
-    elif mode == "process":
+    elif mode == "process" or mode == "2":
         from servir.src.processing.pipeline.orchestrator import process_all_jobs
         try:
             process_all_jobs()
@@ -34,7 +40,7 @@ async def main():
             print("\n\nInterrupted by user.")
             sys.exit(0)
         except Exception as e:
-            print(f"\n  Error: {e}")
+            print(f"\nError: {e}")
             import traceback
             traceback.print_exc()
             sys.exit(1)
@@ -42,8 +48,6 @@ async def main():
     else:
         print(f"Unknown mode: {mode}")
         print("Usage: python main.py [collect|process]")
-        print("  collect - Run SERVIR data collection")
-        print("  process - Run data cleaning and processing")
         sys.exit(1)
 
 
