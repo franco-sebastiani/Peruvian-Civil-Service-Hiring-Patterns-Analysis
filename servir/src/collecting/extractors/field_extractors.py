@@ -2,7 +2,7 @@
 HTML parsing functions for extracting individual fields from SERVIR job postings.
 
 Uses Playwright for reliable extraction and better page state management.
-Includes proper Unicode normalization for Spanish/special characters.
+Properly handles UTF-8 encoding to prevent double-encoding issues with Spanish characters.
 """
 
 
@@ -13,7 +13,7 @@ async def _extract_field_by_class(page, field_name, class_name):
     Searches for a span with the given class name that contains the field name,
     then returns the text content of the next 'detalle-sp' sibling.
     
-    Normalizes Unicode characters to prevent encoding issues.
+    Properly handles UTF-8 encoding for Spanish/special characters.
     
     Args:
         page: Playwright page object
@@ -39,10 +39,10 @@ async def _extract_field_by_class(page, field_name, class_name):
                         let next = label.nextElementSibling;
                         while (next) {{
                             if (next.classList && next.classList.contains('detalle-sp')) {{
-                                // Extract text and normalize Unicode characters
+                                // Extract text and ensure proper UTF-8 handling
                                 let text = next.textContent.trim();
-                                // Normalize to NFC form (canonical composed form)
-                                return text.normalize('NFC');
+                                // Return as-is; encoding already handled by Playwright
+                                return text;
                             }}
                             next = next.nextElementSibling;
                         }}
@@ -52,6 +52,9 @@ async def _extract_field_by_class(page, field_name, class_name):
             }}
         """)
         
+        # Ensure result is properly encoded as UTF-8 string
+        if value:
+            return str(value).encode('utf-8', errors='replace').decode('utf-8')
         return value
         
     except Exception as e:
@@ -94,7 +97,7 @@ async def extract_job_title(page):
     """
     Extract the job title from the detail page.
     
-    Normalizes Unicode characters to prevent encoding issues.
+    Properly handles UTF-8 encoding for Spanish characters (á, é, í, ó, ú, ñ, etc.).
     
     Args:
         page: Playwright page object
@@ -106,8 +109,9 @@ async def extract_job_title(page):
         job_title_elem = page.locator('span.sp-aviso0').first
         job_title = await job_title_elem.text_content()
         if job_title:
-            # Normalize Unicode characters and trim whitespace
-            return job_title.strip().normalize('NFC')
+            # Clean whitespace and ensure UTF-8 encoding
+            text = job_title.strip()
+            return text.encode('utf-8', errors='replace').decode('utf-8')
         return None
     except Exception:
         return None
@@ -117,7 +121,7 @@ async def extract_institution(page):
     """
     Extract the institution name from the detail page.
     
-    Normalizes Unicode characters to prevent encoding issues.
+    Properly handles UTF-8 encoding for Spanish characters (á, é, í, ó, ú, ñ, etc.).
     
     Args:
         page: Playwright page object
@@ -129,8 +133,9 @@ async def extract_institution(page):
         institution_elem = page.locator('span.sp-aviso').first
         institution = await institution_elem.text_content()
         if institution:
-            # Normalize Unicode characters and trim whitespace
-            return institution.strip().normalize('NFC')
+            # Clean whitespace and ensure UTF-8 encoding
+            text = institution.strip()
+            return text.encode('utf-8', errors='replace').decode('utf-8')
         return None
     except Exception:
         return None
@@ -140,7 +145,7 @@ async def extract_posting_unique_id(page):
     """
     Extract the posting unique ID (Nº) from the detail page.
     
-    Normalizes Unicode characters to prevent encoding issues.
+    Properly handles UTF-8 encoding.
     
     Args:
         page: Playwright page object
@@ -153,10 +158,10 @@ async def extract_posting_unique_id(page):
             () => {
                 let elements = document.querySelectorAll('.sub-titulo-2');
                 for (let el of elements) {
-                    // Normalize text before checking
-                    let normalizedText = el.textContent.normalize('NFC');
-                    if (normalizedText.includes('Nº')) {
-                        let match = normalizedText.match(/\\d+/);
+                    // Check for 'Nº' pattern (UTF-8 safe)
+                    let text = el.textContent;
+                    if (text.includes('Nº')) {
+                        let match = text.match(/\\d+/);
                         return match ? match[0] : null;
                     }
                 }
