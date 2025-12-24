@@ -2,6 +2,7 @@
 HTML parsing functions for extracting individual fields from SERVIR job postings.
 
 Uses Playwright for reliable extraction and better page state management.
+Includes proper Unicode normalization for Spanish/special characters.
 """
 
 
@@ -11,6 +12,8 @@ async def _extract_field_by_class(page, field_name, class_name):
     
     Searches for a span with the given class name that contains the field name,
     then returns the text content of the next 'detalle-sp' sibling.
+    
+    Normalizes Unicode characters to prevent encoding issues.
     
     Args:
         page: Playwright page object
@@ -36,7 +39,10 @@ async def _extract_field_by_class(page, field_name, class_name):
                         let next = label.nextElementSibling;
                         while (next) {{
                             if (next.classList && next.classList.contains('detalle-sp')) {{
-                                return next.textContent.trim();
+                                // Extract text and normalize Unicode characters
+                                let text = next.textContent.trim();
+                                // Normalize to NFC form (canonical composed form)
+                                return text.normalize('NFC');
                             }}
                             next = next.nextElementSibling;
                         }}
@@ -88,6 +94,8 @@ async def extract_job_title(page):
     """
     Extract the job title from the detail page.
     
+    Normalizes Unicode characters to prevent encoding issues.
+    
     Args:
         page: Playwright page object
     
@@ -97,7 +105,10 @@ async def extract_job_title(page):
     try:
         job_title_elem = page.locator('span.sp-aviso0').first
         job_title = await job_title_elem.text_content()
-        return job_title.strip() if job_title else None
+        if job_title:
+            # Normalize Unicode characters and trim whitespace
+            return job_title.strip().normalize('NFC')
+        return None
     except Exception:
         return None
 
@@ -105,6 +116,8 @@ async def extract_job_title(page):
 async def extract_institution(page):
     """
     Extract the institution name from the detail page.
+    
+    Normalizes Unicode characters to prevent encoding issues.
     
     Args:
         page: Playwright page object
@@ -115,14 +128,19 @@ async def extract_institution(page):
     try:
         institution_elem = page.locator('span.sp-aviso').first
         institution = await institution_elem.text_content()
-        return institution.strip() if institution else None
+        if institution:
+            # Normalize Unicode characters and trim whitespace
+            return institution.strip().normalize('NFC')
+        return None
     except Exception:
         return None
 
 
 async def extract_posting_unique_id(page):
     """
-    Extract the posting unique ID (N°) from the detail page.
+    Extract the posting unique ID (Nº) from the detail page.
+    
+    Normalizes Unicode characters to prevent encoding issues.
     
     Args:
         page: Playwright page object
@@ -135,8 +153,10 @@ async def extract_posting_unique_id(page):
             () => {
                 let elements = document.querySelectorAll('.sub-titulo-2');
                 for (let el of elements) {
-                    if (el.textContent.includes('N°')) {
-                        let match = el.textContent.match(/\\d+/);
+                    // Normalize text before checking
+                    let normalizedText = el.textContent.normalize('NFC');
+                    if (normalizedText.includes('Nº')) {
+                        let match = normalizedText.match(/\\d+/);
                         return match ? match[0] : null;
                     }
                 }
