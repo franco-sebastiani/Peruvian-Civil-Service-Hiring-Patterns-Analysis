@@ -44,8 +44,13 @@ def clean_job(raw_job):
         contract_result = transform_contract_type(raw_job.get('contract_type_raw'))
         
         # Clean text fields
-        title_result = transform_text(raw_job.get('job_title'))
+        # Job title: remove Roman numerals (e.g., "ASISTENTE II" → "ASISTENTE")
+        title_result = transform_text(raw_job.get('job_title'), remove_roman_numerals=True)
+        
+        # Institution: clean text but keep numerals (might be part of institution name)
         institution_result = transform_text(raw_job.get('institution'))
+        
+        # Other text fields: clean text, no Roman numeral removal
         experience_result = transform_text(raw_job.get('experience_requirements'))
         academic_result = transform_text(raw_job.get('academic_profile'))
         specialization_result = transform_text(raw_job.get('specialization'))
