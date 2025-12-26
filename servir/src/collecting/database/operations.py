@@ -23,6 +23,7 @@ def insert_job_offer(job_data):
             - success: True if inserted, False if error or duplicate
             - message: Description of what happened
     """
+    print("TESTING")
     # Validate input
     if not job_data:
         return False, "No job data provided"
