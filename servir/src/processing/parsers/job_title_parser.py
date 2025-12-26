@@ -2,9 +2,11 @@
 Job title parser for processing phase.
 
 Cleans and standardizes job titles by:
-1. Generic text cleaning (whitespace, punctuation)
-2. Removing structural markers (quantity prefixes, Roman numerals)
-3. Removing gender markers ((A), /O, etc.)
+1. Removing structural markers (quantity prefixes, Roman numerals)
+2. Removing gender markers ((A), /O, etc.)
+3. Applying generic text cleaning (whitespace, punctuation)
+
+Flow: Specific cleaning → Generic cleaning
 """
 
 import re
@@ -16,10 +18,10 @@ def clean_job_title(raw_title):
     Clean and standardize a job title.
     
     Process:
-    1. Apply generic text cleaning (trim, quotes, punctuation)
-    2. Remove quantity prefixes (UN/A, UNA, UN, UNOS, UNAS)
-    3. Remove gender markers ((A), (O), /A, /O)
-    4. Remove Roman numerals (I, II, III, IV, etc.)
+    1. Remove quantity prefixes (UN/A, UNA, UN, UNOS, UNAS)
+    2. Remove gender markers ((A), (O), /A, /O)
+    3. Remove Roman numerals (I, II, III, IV, etc.)
+    4. Apply generic text cleaning (trim, quotes, punctuation, spaces)
     
     Args:
         raw_title: Raw job title string from collection database
@@ -28,19 +30,18 @@ def clean_job_title(raw_title):
         str: Cleaned job title, or None if empty/invalid
     """
     
-    # Step 1: Generic text cleaning
-    cleaned = clean_text(raw_title)
-    
-    # Handle None or "NO INFO" results
-    if not cleaned or cleaned == 'NO INFO':
+    # Handle None or non-string input
+    if not raw_title or not isinstance(raw_title, str):
         return None
     
     try:
-        # Step 2: Remove quantity prefixes from start
+        cleaned = raw_title
+        
+        # Step 1: Remove quantity prefixes from start
         # Matches: UN/A, UNA, UN, UNOS, UNAS (case-insensitive)
         cleaned = re.sub(r'^(UN/A|UNA|UNAS|UNOS|UN)\s+', '', cleaned, flags=re.IGNORECASE)
         
-        # Step 3: Remove gender markers
+        # Step 2: Remove gender markers
         # Matches: (A), (O), /A, /O with optional surrounding spaces
         cleaned = re.sub(r'\s*[(/]([AO])[)]\s*', ' ', cleaned)  # (A) or (O)
         cleaned = re.sub(r'\s*/[AO]\s*', ' ', cleaned)  # /A or /O
@@ -48,16 +49,31 @@ def clean_job_title(raw_title):
         # Clean up multiple spaces from gender marker removal
         cleaned = ' '.join(cleaned.split())
         
-        # Step 4: Remove Roman numerals from end
-        # Matches: I, II, III, IV, V, X, L, C, D, M, etc.
+        # Step 3: Remove Roman numerals from end
+        # Matches: I, II, III, IV, V, VI, VII, VIII, IX, X, XL, L, XC, C, CD, D, CM, M
         # Pattern: whitespace + Roman numerals + optional whitespace at end
-        cleaned = re.sub(r'\s+(I+|IV|V|IX|X|XL|L|XC|C|CD|D|CM|M)+\s*$', '', cleaned, flags=re.IGNORECASE)
+        # Note: Order matters! Match longer patterns first (CM, CD, XC, XL, IX, IV)
+        cleaned = re.sub(r'\s+(CM|CD|XC|XL|IX|IV|[IVX])+\s*', ' ', cleaned, flags=re.IGNORECASE)
         
-        # Final trim
-        cleaned = cleaned.strip()
+        # Step 4: Apply generic text cleaning
+        # This handles: trim, quotes, punctuation, extra spaces
+        cleaned = clean_text(cleaned)
         
-        # Handle empty result after all removals
-        if not cleaned:
+        # Handle None or "NO INFO" results from generic cleaning
+        if not cleaned or cleaned == 'NO INFO':
+            return None
+        
+        return cleaned
+    
+    except Exception:
+        return None
+        
+        # Step 4: Apply generic text cleaning
+        # This handles: trim, quotes, punctuation, extra spaces
+        cleaned = clean_text(cleaned)
+        
+        # Handle None or "NO INFO" results from generic cleaning
+        if not cleaned or cleaned == 'NO INFO':
             return None
         
         return cleaned
