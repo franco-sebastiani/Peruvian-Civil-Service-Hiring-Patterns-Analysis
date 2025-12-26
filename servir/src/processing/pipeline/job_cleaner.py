@@ -8,12 +8,20 @@ from servir.src.processing.parsers.salary_parser import transform_salary
 from servir.src.processing.parsers.vacancy_parser import transform_vacancy
 from servir.src.processing.parsers.date_parser import transform_date
 from servir.src.processing.parsers.contract_parser import transform_contract_type
-from servir.src.processing.parsers.text_parser import transform_text
+from servir.src.processing.parsers.text_parser import clean_text
 
 
 def clean_job(raw_job):
     """
     Clean a single raw job by applying all parsers.
+    
+    Processing steps:
+    1. Parse salary → standardized amount
+    2. Parse vacancy → integer count
+    3. Parse dates → ISO format
+    4. Parse contract type → standardized category
+    5. Clean text fields → trimmed, punctuation removed
+    6. Remove Roman numerals from job title (e.g., "ASISTENTE II" → "ASISTENTE")
     
     Args:
         raw_job: dict with raw job data from collection database
@@ -44,38 +52,33 @@ def clean_job(raw_job):
         contract_result = transform_contract_type(raw_job.get('contract_type_raw'))
         
         # Clean text fields
-        # Job title: remove structural markers (quantity prefix + Roman numerals) and gender markers
-        title_result = transform_text(
-            raw_job.get('job_title'),
-            remove_structural_markers=True,
-            remove_gender_markers=True
-        )
+        # TODO: Replace with field-specific parsers (job_title_parser, knowledge_parser, etc.)
+        # For now, using generic clean_text() for all fields
+        title_result = clean_text(raw_job.get('job_title'))
+        institution_result = clean_text(raw_job.get('institution'))
         
-        # Institution: clean text but keep numerals (might be part of institution name)
-        institution_result = transform_text(raw_job.get('institution'))
-        
-        # Other text fields: clean text, no Roman numeral removal
-        experience_result = transform_text(raw_job.get('experience_requirements'))
-        academic_result = transform_text(raw_job.get('academic_profile'))
-        specialization_result = transform_text(raw_job.get('specialization'))
-        knowledge_result = transform_text(raw_job.get('knowledge'))
-        competencies_result = transform_text(raw_job.get('competencies'))
+        # Other text fields: clean text, no field-specific logic yet
+        experience_result = clean_text(raw_job.get('experience_requirements'))
+        academic_result = clean_text(raw_job.get('academic_profile'))
+        specialization_result = clean_text(raw_job.get('specialization'))
+        knowledge_result = clean_text(raw_job.get('knowledge'))
+        competencies_result = clean_text(raw_job.get('competencies'))
         
         # Build cleaned job
         cleaned_job = {
             'posting_unique_id': posting_id,
-            'job_title': title_result['text'],
-            'institution': institution_result['text'],
+            'job_title': title_result,
+            'institution': institution_result,
             'posting_start_date': start_date_result['date_iso'],
             'posting_end_date': end_date_result['date_iso'],
             'salary_amount': salary_result['salary_amount'],
             'number_of_vacancies': vacancy_result['vacancy_count'],
             'contract_type': contract_result['contract_type'],
-            'experience_requirements': experience_result['text'],
-            'academic_profile': academic_result['text'],
-            'specialization': specialization_result['text'],
-            'knowledge': knowledge_result['text'],
-            'competencies': competencies_result['text']
+            'experience_requirements': experience_result,
+            'academic_profile': academic_result,
+            'specialization': specialization_result,
+            'knowledge': knowledge_result,
+            'competencies': competencies_result
         }
         
         # Identify failed fields (None values)
