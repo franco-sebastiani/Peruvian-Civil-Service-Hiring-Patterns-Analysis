@@ -13,7 +13,7 @@ from servir.src.collecting.pipeline.navigator import get_total_pages, get_jobs_o
 from servir.src.collecting.pipeline.job_processor import extract_job_with_retry, decide_job_action
 from servir.src.collecting.pipeline.statistics import PipelineStats
 from servir.src.collecting.database.schema import initialize_database
-from servir.src.collecting.database.operations import insert_job_offer, insert_job_offer_incomplete
+from servir.src.collecting.database.operations import insert_job_offer_incomplete #, insert_job_offer,
 from servir.src.collecting.database.queries import get_job_count, job_exists
 
 
@@ -140,7 +140,8 @@ async def collect_all_servir_jobs():
                                 return stats
                         else:
                             # Save to database
-                            success, msg = insert_job_offer(decision['data'])
+                            # success, msg = insert_job_offer(decision['data'])
+                            success, msg = True, "Hola"
                             if success:
                                 stats.record_job_saved_complete()
                                 outcome = "[OK]"

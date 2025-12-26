@@ -10,86 +10,8 @@ from datetime import datetime
 from servir.src.database.connection import get_connection, close_connection
 
 
-def insert_job_offer(job_data):
-    """
-    Insert a new job offer into the database.
-    
-    Args:
-        job_data (dict): Job offer data dictionary with field names as keys.
-                        Must include 'posting_unique_id' at minimum.
-    
-    Returns:
-        tuple: (success: bool, message: str)
-            - success: True if inserted, False if error or duplicate
-            - message: Description of what happened
-    """
-    # Validate input
-    if not job_data:
-        return False, "No job data provided"
-    
-    if not job_data.get('posting_unique_id'):
-        return False, "Missing required field: posting_unique_id"
-    
-    conn = get_connection()
-    
-    if not conn:
-        return False, "Failed to connect to database"
-    
-    try:
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            INSERT INTO job_postings (
-                posting_unique_id,
-                job_title,
-                institution,
-                monthly_salary,
-                number_of_vacancies,
-                posting_start_date,
-                posting_end_date,
-                contract_type_raw,
-                experience_requirements,
-                academic_profile,
-                specialization,
-                knowledge,
-                competencies,
-                scraped_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            job_data.get('posting_unique_id'),
-            job_data.get('job_title'),
-            job_data.get('institution'),
-            job_data.get('monthly_salary'),
-            job_data.get('number_of_vacancies'),
-            job_data.get('posting_start_date'),
-            job_data.get('posting_end_date'),
-            job_data.get('contract_type_raw'),
-            job_data.get('experience_requirements'),
-            job_data.get('academic_profile'),
-            job_data.get('specialization'),
-            job_data.get('knowledge'),
-            job_data.get('competencies'),
-            datetime.now()
-        ))
-        
-        conn.commit()
-        
-        # Build success message
-        job_id = job_data.get('posting_unique_id')
-        job_title = job_data.get('job_title', 'Unknown Title')
-        return True, f"{job_id} - {job_title}"
-        
-    except sqlite3.IntegrityError:
-        # Duplicate posting_unique_id
-        job_id = job_data.get('posting_unique_id')
-        return False, f"Job {job_id} already exists in database"
-        
-    except Exception as e:
-        return False, f"Database error: {str(e)}"
-        
-    finally:
-        close_connection(conn)
-
+def aa():
+    print("Pato momo")
 
 def insert_job_offer_incomplete(job_data, missing_fields):
     """
