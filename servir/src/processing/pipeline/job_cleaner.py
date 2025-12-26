@@ -9,6 +9,12 @@ from servir.src.processing.parsers.vacancy_parser import transform_vacancy
 from servir.src.processing.parsers.date_parser import transform_date
 from servir.src.processing.parsers.contract_parser import transform_contract_type
 from servir.src.processing.parsers.text_parser import clean_text
+from servir.src.processing.parsers.job_title_parser import clean_job_title
+from servir.src.processing.parsers.knowledge_parser import clean_knowledge
+from servir.src.processing.parsers.competencies_parser import clean_competencies
+from servir.src.processing.parsers.experience_parser import clean_experience
+from servir.src.processing.parsers.academic_parser import clean_academic_profile
+from servir.src.processing.parsers.specialization_parser import clean_specialization
 
 
 def clean_job(raw_job):
@@ -51,18 +57,19 @@ def clean_job(raw_job):
         # Parse contract type
         contract_result = transform_contract_type(raw_job.get('contract_type_raw'))
         
-        # Clean text fields
-        # TODO: Replace with field-specific parsers (job_title_parser, knowledge_parser, etc.)
-        # For now, using generic clean_text() for all fields
-        title_result = clean_text(raw_job.get('job_title'))
+        # Clean text fields using field-specific parsers
+        # Job title: remove markers, gender, numerals, then generic cleaning
+        title_result = clean_job_title(raw_job.get('job_title'))
+        
+        # Institution: generic cleaning only (no job-title-specific logic)
         institution_result = clean_text(raw_job.get('institution'))
         
-        # Other text fields: clean text, no field-specific logic yet
-        experience_result = clean_text(raw_job.get('experience_requirements'))
-        academic_result = clean_text(raw_job.get('academic_profile'))
-        specialization_result = clean_text(raw_job.get('specialization'))
-        knowledge_result = clean_text(raw_job.get('knowledge'))
-        competencies_result = clean_text(raw_job.get('competencies'))
+        # Other fields: use their specific parsers
+        experience_result = clean_experience(raw_job.get('experience_requirements'))
+        academic_result = clean_academic_profile(raw_job.get('academic_profile'))
+        specialization_result = clean_specialization(raw_job.get('specialization'))
+        knowledge_result = clean_knowledge(raw_job.get('knowledge'))
+        competencies_result = clean_competencies(raw_job.get('competencies'))
         
         # Build cleaned job
         cleaned_job = {
