@@ -43,10 +43,42 @@ def clean_job_title(raw_title):
         cleaned = re.sub(r'^(UN/A|UNA|UNAS|UNOS|UN)\s+', '', cleaned, flags=re.IGNORECASE)
         
         # Step 2: Remove position/level numbers
-        # Matches: (1), (2), 1, 2, etc. at start, middle, or end
-        cleaned = re.sub(r'^\(?(\d+)\)?\s*', '', cleaned)  # (1) or 1 at start
-        cleaned = re.sub(r'\s+\(?(\d+)\)?\s+', ' ', cleaned)  # 1 or (1) in middle
-        cleaned = re.sub(r'\s+\(?(\d+)\)?\s*$', '', cleaned)  # 1 or (1) at end
+        # Matches: (1), (2), 1, 2, 01, 02, etc. at start, middle, or end
+        # Also handles numbers followed by dots: "1.", "13.", etc.
+        cleaned = re.sub(r'^\(?\d+\)?[\s.]*', '', cleaned)  # (1), 1, or 1. at start
+        cleaned = re.sub(r'\s+\(?\d+\)?[\s.]*', ' ', cleaned)  # 1 or (1) with dot/space
+        cleaned = re.sub(r'[\s.]+\(?\d+\)?[\s.]* $', '', cleaned)  # at end
+        
+        # Step 3: Remove gender markers
+        # Matches: (A), (O), /A, /O with optional surrounding spaces
+        cleaned = re.sub(r'\s*[(/]([AO])[)]\s*', ' ', cleaned)  # (A) or (O)
+        cleaned = re.sub(r'\s*/[AO]\s*', ' ', cleaned)  # /A or /O
+        
+        # Clean up multiple spaces from marker removals
+        cleaned = ' '.join(cleaned.split())
+        
+        # Step 4: Remove Roman numerals (anywhere in string, not just end)
+        # Handles cases like:
+        #   "ASISTENTE I" → "ASISTENTE"
+        #   "PROFESIONAL I – REGISTRADOR" → "PROFESIONAL REGISTRADOR"
+        # Pattern: space + Roman numerals + space or dash
+        cleaned = re.sub(r'\s+(CM|CD|XC|XL|IX|IV|[IVX])+[\s–\-]*', ' ', cleaned, flags=re.IGNORECASE)
+        
+        # Clean up multiple spaces
+        cleaned = ' '.join(cleaned.split())
+        
+        # Step 5: Apply generic text cleaning
+        # This handles: trim, quotes, punctuation, extra spaces
+        cleaned = clean_text(cleaned)
+        
+        # Handle None or "NO INFO" results from generic cleaning
+        if not cleaned or cleaned == 'NO INFO':
+            return None
+        
+        return cleaned
+    
+    except Exception:
+        return None
         
         # Step 3: Remove gender markers
         # Matches: (A), (O), /A, /O with optional surrounding spaces
