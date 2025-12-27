@@ -27,15 +27,15 @@ def insert_processed_job(job_data):
     try:
         from servir.src.database.connection import get_connection, close_connection
         
-        conn = get_connection(db_type='processed')
+        conn = get_connection(db_type='cleaning')
         
         if not conn:
-            return False, "Failed to connect to processed database"
+            return False, "Failed to connect to cleaning database"
         
         cursor = conn.cursor()
         
         cursor.execute("""
-            INSERT INTO processed_jobs (
+            INSERT INTO cleaned_jobs (
                 posting_unique_id,
                 job_title,
                 institution,
@@ -102,17 +102,17 @@ def insert_processed_job_incomplete(job_data, failed_fields):
     try:
         from servir.src.database.connection import get_connection, close_connection
         
-        conn = get_connection(db_type='processed')
+        conn = get_connection(db_type='cleaning')
         
         if not conn:
-            return False, "Failed to connect to processed database"
+            return False, "Failed to connect to cleaning database"
         
         cursor = conn.cursor()
         
         failed_fields_str = ", ".join(failed_fields) if failed_fields else ""
         
         cursor.execute("""
-            INSERT INTO processed_jobs_incomplete (
+            INSERT INTO cleaned_jobs_incomplete (
                 posting_unique_id,
                 job_title,
                 institution,

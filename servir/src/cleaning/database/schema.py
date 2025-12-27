@@ -12,14 +12,14 @@ def get_processed_db_path():
     """
     Get the path to the processed jobs database file.
     
-    The database is stored at: servir/data/processed/servir_jobs_processed.db
+    The database is stored at: servir/data/cleaned/servir_jobs_cleaned.db
     Creates the directory structure if it doesn't exist.
     
     Returns:
         Path: Path object pointing to the database file
     """
     try:
-        db_path = Path(__file__).parent.parent.parent.parent / "data" / "processed" / "servir_jobs_processed.db"
+        db_path = Path(__file__).parent.parent.parent.parent / "data" / "cleaned" / "servir_jobs_cleaned.db"
         db_path.parent.mkdir(parents=True, exist_ok=True)
         return db_path
     except OSError as e:
@@ -32,8 +32,8 @@ def initialize_database():
     Initialize the processed jobs database and create tables.
     
     Creates:
-    - processed_jobs: Complete, clean jobs ready for analysis
-    - processed_jobs_incomplete: Jobs with missing/failed fields requiring review
+    - cleaned_jobs: Complete, clean jobs ready for analysis
+    - cleaned_jobs_incomplete: Jobs with missing/failed fields requiring review
     
     Returns:
         bool: True if successful, False otherwise
@@ -41,7 +41,7 @@ def initialize_database():
     try:
         from servir.src.database.connection import get_connection
         
-        conn = get_connection(db_type='processed')
+        conn = get_connection(db_type='cleaning')
         
         if not conn:
             print("Failed to connect to processed database")
@@ -51,7 +51,7 @@ def initialize_database():
         
         # Processed jobs table (complete, clean data)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS processed_jobs (
+            CREATE TABLE IF NOT EXISTS cleaned_jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 posting_unique_id TEXT UNIQUE NOT NULL,
                 job_title TEXT,
@@ -72,7 +72,7 @@ def initialize_database():
         
         # Processed jobs incomplete table (for manual review)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS processed_jobs_incomplete (
+            CREATE TABLE IF NOT EXISTS cleaned_jobs_incomplete (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 posting_unique_id TEXT UNIQUE NOT NULL,
                 job_title TEXT,

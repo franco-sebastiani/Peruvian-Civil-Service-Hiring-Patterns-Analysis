@@ -40,7 +40,7 @@ def insert_job_offer(job_data):
         cursor = conn.cursor()
         
         cursor.execute("""
-            INSERT INTO job_postings (
+            INSERT INTO extracted_jobs (
                 posting_unique_id,
                 job_title,
                 institution,
@@ -125,7 +125,7 @@ def insert_job_offer_incomplete(job_data, missing_fields):
         missing_fields_str = ", ".join(missing_fields) if missing_fields else ""
         
         cursor.execute("""
-            INSERT INTO job_postings_incomplete (
+            INSERT INTO extracted_jobs_incomplete (
                 posting_unique_id,
                 job_title,
                 institution,

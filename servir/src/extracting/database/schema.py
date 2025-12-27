@@ -28,7 +28,7 @@ def create_job_postings_table():
         cursor = conn.cursor()
         
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS job_postings (
+            CREATE TABLE IF NOT EXISTS extracted_jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 posting_unique_id TEXT UNIQUE NOT NULL,
                 job_title TEXT,
@@ -51,7 +51,7 @@ def create_job_postings_table():
         return True
         
     except Exception as e:
-        print(f"Error creating job_postings table: {e}")
+        print(f"Error creating extracted_jobs table: {e}")
         return False
         
     finally:
@@ -78,7 +78,7 @@ def create_job_postings_incomplete_table():
         cursor = conn.cursor()
         
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS job_postings_incomplete (
+            CREATE TABLE IF NOT EXISTS extracted_jobs_incomplete (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 posting_unique_id TEXT UNIQUE NOT NULL,
                 job_title TEXT,
@@ -106,7 +106,7 @@ def create_job_postings_incomplete_table():
         return True
         
     except Exception as e:
-        print(f"Error creating job_postings_incomplete table: {e}")
+        print(f"Error creating extracted_jobs_incomplete table: {e}")
         return False
         
     finally:
@@ -122,8 +122,8 @@ def initialize_database():
     to ensure the database is ready.
     
     Currently creates:
-    - job_postings table (complete jobs)
-    - job_postings_incomplete table (jobs missing fields for manual review)
+    - extracted_jobs table (complete jobs)
+    - extracted_jobs_incomplete table (jobs missing fields for manual review)
     
     Returns:
         bool: True if initialization successful, False otherwise

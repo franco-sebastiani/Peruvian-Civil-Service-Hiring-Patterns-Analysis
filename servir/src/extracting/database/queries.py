@@ -30,7 +30,7 @@ def job_exists(posting_unique_id):
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT COUNT(*) FROM job_postings 
+            SELECT COUNT(*) FROM extracted_jobs 
             WHERE posting_unique_id = ?
         """, (posting_unique_id,))
         
@@ -60,7 +60,7 @@ def get_job_count():
     try:
         cursor = conn.cursor()
         
-        cursor.execute("SELECT COUNT(*) FROM job_postings")
+        cursor.execute("SELECT COUNT(*) FROM extracted_jobs")
         count = cursor.fetchone()[0]
         
         return count
@@ -94,7 +94,7 @@ def get_job_by_id(posting_unique_id):
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT * FROM job_postings 
+            SELECT * FROM extracted_jobs 
             WHERE posting_unique_id = ?
         """, (posting_unique_id,))
         
@@ -131,7 +131,7 @@ def get_all_jobs(limit=None):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        query = "SELECT * FROM job_postings ORDER BY scraped_at DESC"
+        query = "SELECT * FROM extracted_jobs ORDER BY scraped_at DESC"
         if limit:
             query += f" LIMIT {limit}"
         
