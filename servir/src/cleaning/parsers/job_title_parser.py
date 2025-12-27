@@ -10,7 +10,7 @@ Flow: Specific cleaning → Generic cleaning
 """
 
 import re
-from servir.src.processing.parsers.text_parser import clean_text
+from servir.src.processing.cleaning.parsers.text_parser import clean_text
 
 
 def clean_job_title(raw_title):

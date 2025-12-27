@@ -1,6 +1,6 @@
 from collections import defaultdict
-from servir.src.processing.parsers.text_parser import transform_text
-from servir.src.collecting.database.queries import get_all_jobs
+from servir.src.cleaning.parsers.text_parser import transform_text
+from servir.src.cleaning.database.queries import get_all_jobs
 
 
 def discover_text_patterns():
