@@ -1,17 +1,20 @@
 """
-Database connection management for SERVIR data.
+Database connection management for SERVIR data pipeline.
+
+Supports all phases: extracting, cleaning, transforming.
+Single source of truth for database connections across all phases.
 """
 
 import sqlite3
 from pathlib import Path
 
 
-def get_db_path(db_type='collection'):
+def get_db_path(db_type='extracting'):
     """
     Get the path to a SERVIR database file.
     
     Args:
-        db_type: 'collection' (raw data) or 'processed' (cleaned data)
+        db_type: 'extracting' (raw data), 'cleaning' (cleaned data), or 'transforming' (transformed data)
     
     Returns:
         Path: Path object pointing to the database file
@@ -20,12 +23,14 @@ def get_db_path(db_type='collection'):
         ValueError: If db_type is invalid
         OSError: If unable to create directory structure
     """
-    if db_type == 'collection':
+    if db_type == 'extracting':
         db_path = Path(__file__).parent.parent.parent / "data" / "raw" / "servir_jobs.db"
-    elif db_type == 'processed':
-        db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_processed.db"
+    elif db_type == 'cleaning':
+        db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_cleaned.db"
+    elif db_type == 'transforming':
+        db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_transformed.db"
     else:
-        raise ValueError(f"Invalid db_type: {db_type}. Must be 'collection' or 'processed'")
+        raise ValueError(f"Invalid db_type: {db_type}. Must be 'extracting', 'cleaning', or 'transforming'")
     
     try:
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -35,19 +40,20 @@ def get_db_path(db_type='collection'):
         raise
 
 
-def get_connection(db_type='collection'):
+def get_connection(db_type='extracting'):
     """
     Create and return a database connection.
     
     Args:
-        db_type: 'collection' (raw data) or 'processed' (cleaned data)
+        db_type: 'extracting' (raw data), 'cleaning' (cleaned data), or 'transforming' (transformed data)
     
     Returns:
         sqlite3.Connection: Active database connection, or None if failed
     """
     try:
         db_path = get_db_path(db_type)
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(str(db_path))
+        conn.execute('PRAGMA encoding="UTF-8"')
         return conn
     
     except sqlite3.Error as e:
