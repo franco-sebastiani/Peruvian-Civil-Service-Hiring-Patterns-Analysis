@@ -8,13 +8,13 @@ Contains the core collection loop.
 from datetime import datetime
 from playwright.async_api import async_playwright
 
-from servir.src.collecting.config.config import SERVIR_URL, CONSECUTIVE_DUPLICATES_THRESHOLD
-from servir.src.collecting.pipeline.navigator import get_total_pages, get_jobs_on_current_page, navigate_next_page
-from servir.src.collecting.pipeline.job_processor import extract_job_with_retry, decide_job_action
-from servir.src.collecting.pipeline.statistics import PipelineStats
-from servir.src.collecting.database.schema import initialize_database
-from servir.src.collecting.database.operations import insert_job_offer, insert_job_offer_incomplete
-from servir.src.collecting.database.queries import get_job_count, job_exists
+from servir.src.extracting.config.config import SERVIR_URL, CONSECUTIVE_DUPLICATES_THRESHOLD
+from servir.src.extracting.pipeline.navigator import get_total_pages, get_jobs_on_current_page, navigate_next_page
+from servir.src.extracting.pipeline.job_processor import extract_job_with_retry, decide_job_action
+from servir.src.extracting.pipeline.statistics import PipelineStats
+from servir.src.extracting.database.schema import initialize_database
+from servir.src.extracting.database.operations import insert_job_offer, insert_job_offer_incomplete
+from servir.src.extracting.database.queries import get_job_count, job_exists
 
 
 async def collect_all_servir_jobs():

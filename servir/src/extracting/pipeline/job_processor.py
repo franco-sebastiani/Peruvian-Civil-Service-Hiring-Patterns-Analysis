@@ -5,8 +5,8 @@ Handles extraction and validation of a single job posting.
 Separates extraction logic from database decision logic.
 """
 
-from servir.src.collecting.extractors.scraper import scrape_single_job
-from servir.src.collecting.pipeline.job_validator import validate_job_data
+from servir.src.extracting.extractors.scraper import scrape_single_job
+from servir.src.extracting.pipeline.job_validator import validate_job_data
 
 
 async def extract_job_with_retry(page, job_idx, max_retries=1):

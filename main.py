@@ -20,7 +20,7 @@ async def main():
         mode = input("\nEnter option (collect/process): ").strip().lower()
     
     if mode == "collect" or mode == "1":
-        from servir.src.cleaning.pipeline.orchestrator import collect_all_servir_jobs
+        from servir.src.extracting.pipeline.orchestrator import collect_all_servir_jobs
         try:
             await collect_all_servir_jobs()
         except KeyboardInterrupt:
@@ -33,9 +33,9 @@ async def main():
             sys.exit(1)
     
     elif mode == "process" or mode == "2":
-        from servir.src.cleaning.pipeline.orchestrator import process_all_jobs
+        from servir.src.cleaning.pipeline.orchestrator import clean_all_jobs
         try:
-            process_all_jobs()
+            clean_all_jobs()
         except KeyboardInterrupt:
             print("\n\nInterrupted by user.")
             sys.exit(0)

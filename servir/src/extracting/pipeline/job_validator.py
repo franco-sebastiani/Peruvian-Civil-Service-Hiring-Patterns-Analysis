@@ -4,7 +4,7 @@ Validation module for job posting data.
 Checks if extracted job data is complete and valid.
 """
 
-from servir.src.collecting.config.config import REQUIRED_FIELDS
+from servir.src.extracting.config.config import REQUIRED_FIELDS
 
 
 def is_data_complete(job_data):
