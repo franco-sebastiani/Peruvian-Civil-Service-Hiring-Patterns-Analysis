@@ -8,7 +8,7 @@ from datetime import datetime
 from servir.src.cleaning.database.schema import initialize_database
 from servir.src.cleaning.database.operations import insert_processed_job, insert_processed_job_incomplete
 from servir.src.cleaning.database.queries import get_processed_job_count, job_already_processed
-from servir.src.cleaning.database.queries import get_all_jobs
+from servir.src.extracting.database.queries import get_all_jobs
 from servir.src.cleaning.pipeline.job_cleaner import clean_job
 from servir.src.cleaning.pipeline.statistics import ProcessingStats
 

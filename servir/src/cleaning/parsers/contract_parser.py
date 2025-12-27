@@ -5,7 +5,7 @@ Converts raw contract type strings into standardized categories using pattern ma
 """
 
 import re
-from servir.src.processing.config.contract_config import CONTRACT_TYPE_PATTERNS
+from servir.src.cleaning.config.contract_config import CONTRACT_TYPE_PATTERNS
 
 
 def transform_contract_type(raw_contract_type):

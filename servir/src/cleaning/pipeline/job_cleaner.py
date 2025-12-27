@@ -4,17 +4,17 @@ Job cleaner for processing pipeline.
 Applies all parsers to a single raw job and returns cleaned data.
 """
 
-from servir.src.processing.parsers.salary_parser import transform_salary
-from servir.src.processing.parsers.vacancy_parser import transform_vacancy
-from servir.src.processing.parsers.date_parser import transform_date
-from servir.src.processing.parsers.contract_parser import transform_contract_type
-from servir.src.processing.parsers.text_parser import clean_text
-from servir.src.processing.parsers.job_title_parser import clean_job_title
-from servir.src.processing.parsers.knowledge_parser import clean_knowledge
-from servir.src.processing.parsers.competencies_parser import clean_competencies
-from servir.src.processing.parsers.experience_parser import clean_experience
-from servir.src.processing.parsers.academic_parser import clean_academic_profile
-from servir.src.processing.parsers.specialization_parser import clean_specialization
+from servir.src.cleaning.parsers.salary_parser import transform_salary
+from servir.src.cleaning.parsers.vacancy_parser import transform_vacancy
+from servir.src.cleaning.parsers.date_parser import transform_date
+from servir.src.cleaning.parsers.contract_parser import transform_contract_type
+from servir.src.cleaning.parsers.text_parser import clean_text
+from servir.src.cleaning.parsers.job_title_parser import clean_job_title
+from servir.src.cleaning.parsers.knowledge_parser import clean_knowledge
+from servir.src.cleaning.parsers.competencies_parser import clean_competencies
+from servir.src.cleaning.parsers.experience_parser import clean_experience
+from servir.src.cleaning.parsers.academic_parser import clean_academic_profile
+from servir.src.cleaning.parsers.specialization_parser import clean_specialization
 
 
 def clean_job(raw_job):

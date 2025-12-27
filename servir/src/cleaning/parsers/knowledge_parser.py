@@ -12,7 +12,7 @@ Examples:
     → "EXCEL; WORD; POWERPOINT"
 """
 
-from servir.src.processing.parsers.text_parser import clean_text
+from servir.src.cleaning.parsers.text_parser import clean_text
 
 
 def clean_knowledge(raw_knowledge):

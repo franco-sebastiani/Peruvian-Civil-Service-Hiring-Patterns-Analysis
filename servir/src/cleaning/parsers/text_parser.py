@@ -9,7 +9,7 @@ call clean_text() first, then apply their own specialized logic.
 """
 
 import re
-from servir.src.processing.config.text_config import TEXT_CLEANING_RULES
+from servir.src.cleaning.config.text_config import TEXT_CLEANING_RULES
 
 
 def clean_text(text_str, trim=True, remove_quotes=True, remove_punctuation=True, remove_extra_spaces=True):

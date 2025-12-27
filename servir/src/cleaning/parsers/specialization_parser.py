@@ -12,7 +12,7 @@ Examples:
     → "DERECHO; DERECHO ADMINISTRATIVO; DERECHO PÚBLICO"
 """
 
-from servir.src.processing.parsers.text_parser import clean_text
+from servir.src.cleaning.parsers.text_parser import clean_text
 
 
 def clean_specialization(raw_specialization):
