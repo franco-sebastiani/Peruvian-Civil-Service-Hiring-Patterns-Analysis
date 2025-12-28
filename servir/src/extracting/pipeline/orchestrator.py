@@ -63,17 +63,43 @@ async def collect_all_servir_jobs():
             print("-"*70)
             print("Loading SERVIR portal...")
             print("-"*70)
-            await page.goto(SERVIR_URL, wait_until="networkidle")
-            await page.wait_for_timeout(3000)
-            print("Portal loaded\n")
             
-            # Get total pages
-            total_pages = await get_total_pages(page)
-            if total_pages == 0:
-                print("Could not determine page count. Stopping.")
+            try:
+                response = await page.goto(SERVIR_URL, wait_until="networkidle", timeout=30000)
+                
+                # Check HTTP status
+                if response and response.status != 200:
+                    print(f"Portal returned HTTP {response.status}. Stopping.")
+                    await browser.close()
+                    return None
+                
+                await page.wait_for_timeout(3000)
+                
+                # Verify we got the real SERVIR page, not an error page
+                title = await page.title()
+                if "error" in title.lower() or "cloudflare" in title.lower():
+                    print(f"Portal loaded error page: '{title}'")
+                    print("SERVIR may be down or experiencing issues. Try again later.")
+                    await browser.close()
+                    return None
+                
+                # Verify we can find the pagination
+                total_pages = await get_total_pages(page)
+                if total_pages == 0:
+                    print("Portal loaded but could not find pagination.")
+                    print("SERVIR page structure may have changed.")
+                    await browser.close()
+                    return None
+                
+                # Only now can we confidently say it loaded
+                print("Portal loaded successfully")
+                print(f"Total pages: {total_pages}\n")
+                
+            except Exception as e:
+                print(f"Failed to load portal: {e}")
+                await browser.close()
                 return None
             
-            print(f"Total pages: {total_pages}\n")
             print("-"*70)
             print("EXTRACTING JOBS")
             print("-"*70 + "\n")
