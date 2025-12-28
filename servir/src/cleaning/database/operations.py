@@ -1,16 +1,17 @@
 """
-Database write operations for processed job postings.
+Database write operations for cleaned job postings.
 
-Handles inserting cleaned and standardized jobs into processed database.
+Handles inserting cleaned and standardized jobs into cleaning database.
 """
 
 import sqlite3
 from datetime import datetime
+from servir.src.database.connection import get_connection, close_connection
 
 
-def insert_processed_job(job_data):
+def insert_cleaned_job(job_data):
     """
-    Insert a cleaned job into the processed database.
+    Insert a cleaned job into the cleaning database.
     
     Args:
         job_data (dict): Cleaned job data with all fields processed
@@ -24,14 +25,12 @@ def insert_processed_job(job_data):
     if not job_data.get('posting_unique_id'):
         return False, "Missing required field: posting_unique_id"
     
+    conn = get_connection(db_type='cleaning')
+    
+    if not conn:
+        return False, "Failed to connect to cleaning database"
+    
     try:
-        from servir.src.database.connection import get_connection, close_connection
-        
-        conn = get_connection(db_type='cleaning')
-        
-        if not conn:
-            return False, "Failed to connect to cleaning database"
-        
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -49,7 +48,7 @@ def insert_processed_job(job_data):
                 specialization,
                 knowledge,
                 competencies,
-                processed_at
+                cleaned_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             job_data.get('posting_unique_id'),
@@ -69,26 +68,28 @@ def insert_processed_job(job_data):
         ))
         
         conn.commit()
-        close_connection(conn)
         
         posting_id = job_data.get('posting_unique_id')
         return True, f"Saved: {posting_id}"
     
     except sqlite3.IntegrityError:
         posting_id = job_data.get('posting_unique_id')
-        return False, f"Job {posting_id} already exists in processed database"
+        return False, f"Job {posting_id} already exists in cleaning database"
     
     except Exception as e:
         return False, f"Database error: {str(e)}"
+    
+    finally:
+        close_connection(conn)
 
 
-def insert_processed_job_incomplete(job_data, failed_fields):
+def insert_cleaned_job_incomplete(job_data, failed_fields):
     """
-    Insert a job with processing failures into the incomplete table.
+    Insert a job with cleaning failures into the incomplete table.
     
     Args:
         job_data (dict): Partially cleaned job data
-        failed_fields (list): List of field names that failed processing
+        failed_fields (list): List of field names that failed cleaning
     
     Returns:
         tuple: (success: bool, message: str)
@@ -99,14 +100,12 @@ def insert_processed_job_incomplete(job_data, failed_fields):
     if not job_data.get('posting_unique_id'):
         return False, "Missing required field: posting_unique_id"
     
+    conn = get_connection(db_type='cleaning')
+    
+    if not conn:
+        return False, "Failed to connect to cleaning database"
+    
     try:
-        from servir.src.database.connection import get_connection, close_connection
-        
-        conn = get_connection(db_type='cleaning')
-        
-        if not conn:
-            return False, "Failed to connect to cleaning database"
-        
         cursor = conn.cursor()
         
         failed_fields_str = ", ".join(failed_fields) if failed_fields else ""
@@ -128,7 +127,7 @@ def insert_processed_job_incomplete(job_data, failed_fields):
                 competencies,
                 failed_fields,
                 reviewed,
-                processed_at
+                cleaned_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             job_data.get('posting_unique_id'),
@@ -150,7 +149,6 @@ def insert_processed_job_incomplete(job_data, failed_fields):
         ))
         
         conn.commit()
-        close_connection(conn)
         
         posting_id = job_data.get('posting_unique_id')
         return True, f"Saved incomplete: {posting_id} (missing: {failed_fields_str})"
@@ -161,3 +159,6 @@ def insert_processed_job_incomplete(job_data, failed_fields):
     
     except Exception as e:
         return False, f"Database error: {str(e)}"
+    
+    finally:
+        close_connection(conn)
