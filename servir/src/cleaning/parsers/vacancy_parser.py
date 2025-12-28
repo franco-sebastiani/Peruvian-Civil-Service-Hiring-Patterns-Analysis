@@ -1,16 +1,16 @@
 """
-Vacancy transformer for processing phase.
+Vacancy parser for cleaning phase.
 
 Converts raw vacancy count strings into integer values.
 """
 
 
-def transform_vacancy(vacancy_str):
+def clean_vacancy(vacancy_str):
     """
-    Transform raw vacancy string into clean integer value.
+    Clean raw vacancy string into clean integer value.
     
     Args:
-        vacancy_str: Raw vacancy count string from SERVIR collection database
+        vacancy_str: Raw vacancy count string from extracting database
                     e.g., "1", "5", "10"
     
     Returns:

@@ -1,15 +1,8 @@
 """
-Academic profile parser for processing phase.
+Academic profile parser for cleaning phase.
 
 Cleans academic/education requirements text field.
 Just cleaning - no classification logic.
-
-Examples:
-  "  Título Profesional Universitario en Ingeniería  "
-    → "TÍTULO PROFESIONAL UNIVERSITARIO EN INGENIERÍA"
-  
-  "Educación Secundaria Completa"
-    → "EDUCACIÓN SECUNDARIA COMPLETA"
 """
 
 from servir.src.cleaning.parsers.text_parser import clean_text

@@ -1,5 +1,5 @@
 """
-Date parser for processing phase.
+Date parser for cleaning phase.
 
 Converts raw date strings from SERVIR into standardized ISO format.
 """
@@ -7,14 +7,12 @@ Converts raw date strings from SERVIR into standardized ISO format.
 from datetime import datetime
 
 
-def transform_date(date_str):
+def clean_date(date_str):
     """
-    Transform raw date string into ISO format (YYYY-MM-DD).
-    
-    Handles SERVIR format: "DD/MM/YYYY" (e.g., "19/12/2025")
+    Clean raw date string into ISO format (YYYY-MM-DD).
     
     Args:
-        date_str: Raw date string from SERVIR collection database
+        date_str: Raw date string from extracting database
     
     Returns:
         dict: {

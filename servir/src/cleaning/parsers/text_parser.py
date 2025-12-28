@@ -1,5 +1,5 @@
 """
-Generic text cleaner for processing phase.
+Generic text cleaner for cleaning phase.
 
 Provides core text cleaning functionality used by all field-specific parsers.
 Handles: whitespace, quotes, punctuation, extra spaces.

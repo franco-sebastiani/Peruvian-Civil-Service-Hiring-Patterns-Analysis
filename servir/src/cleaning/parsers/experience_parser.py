@@ -1,15 +1,8 @@
 """
-Experience parser for processing phase.
+Experience parser for cleaning phase.
 
 Cleans experience requirements text field.
 Just cleaning - no classification logic.
-
-Examples:
-  "  Mínimo 3 años de experiencia en gestión pública  "
-    → "MÍNIMO 3 AÑOS DE EXPERIENCIA EN GESTIÓN PÚBLICA"
-  
-  "5 years  in  project management"
-    → "5 YEARS IN PROJECT MANAGEMENT"
 """
 
 from servir.src.cleaning.parsers.text_parser import clean_text

@@ -1,5 +1,5 @@
 """
-Contract type parser for processing phase.
+Contract type parser for cleaning phase.
 
 Converts raw contract type strings into standardized categories using pattern matching.
 """
@@ -8,36 +8,20 @@ import re
 from servir.src.cleaning.config.contract_config import CONTRACT_TYPE_PATTERNS
 
 
-def transform_contract_type(raw_contract_type):
+def clean_contract_type(raw_contract_type):
     """
-    Transform raw contract type string into standardized category.
+    Clean raw contract type string into standardized category.
     
-    Uses regex patterns defined in config/contract_types.py to map raw values
+    Uses regex patterns defined in config/contract_config.py to map raw values
     to standardized contract type categories.
     
     Args:
-        raw_contract_type: Raw contract type string from SERVIR collection database
+        raw_contract_type: Raw contract type string from extracting database
     
     Returns:
         dict: {
             'contract_type': str or None,
             'error': str or None
-        }
-    
-    Examples:
-        transform_contract_type("D.LEG 1057 - DETERMINADO (NECESIDAD TRANSITORIA)-001") → {
-            'contract_type': 'D.LEG 1057 DETERMINADO NECESIDAD TRANSITORIA',
-            'error': None
-        }
-        
-        transform_contract_type("728-001") → {
-            'contract_type': 'D.LEG 728',
-            'error': None
-        }
-        
-        transform_contract_type("UNKNOWN TYPE") → {
-            'contract_type': None,
-            'error': 'Contract type did not match any pattern: UNKNOWN TYPE'
         }
     """
     

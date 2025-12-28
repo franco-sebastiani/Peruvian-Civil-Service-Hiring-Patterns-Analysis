@@ -1,18 +1,16 @@
 """
-Salary transformer for processing phase.
+Salary parser for cleaning phase.
 
 Converts raw salary strings from SERVIR into clean numeric values.
 """
 
 
-def transform_salary(salary_str):
+def clean_salary(salary_str):
     """
-    Transform raw salary string into clean numeric value.
-    
-    Handles SERVIR format: "S/. 6,000.00" or "S/. 6000.00"
+    Clean raw salary string into clean numeric value.
     
     Args:
-        salary_str: Raw salary string from SERVIR collection database
+        salary_str: Raw salary string from extracting database
     
     Returns:
         dict: {

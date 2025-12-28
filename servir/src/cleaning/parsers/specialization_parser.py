@@ -1,15 +1,8 @@
 """
-Specialization parser for processing phase.
+Specialization parser for cleaning phase.
 
 Cleans specialization/major requirements text field.
 Just cleaning - no classification logic.
-
-Examples:
-  "  Ingeniería, Administración, Contabilidad  "
-    → "INGENIERÍA, ADMINISTRACIÓN, CONTABILIDAD"
-  
-  "Derecho;Derecho Administrativo;Derecho Público"
-    → "DERECHO; DERECHO ADMINISTRATIVO; DERECHO PÚBLICO"
 """
 
 from servir.src.cleaning.parsers.text_parser import clean_text

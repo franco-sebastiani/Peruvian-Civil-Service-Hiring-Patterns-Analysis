@@ -1,15 +1,8 @@
 """
-Competencies parser for processing phase.
+Competencies parser for cleaning phase.
 
 Cleans competencies/behavioral skills text field.
 Just cleaning - no classification logic.
-
-Examples:
-  "  LIDERAZGO,  COMUNICACIÓN,  TRABAJO EN EQUIPO  "
-    → "LIDERAZGO, COMUNICACIÓN, TRABAJO EN EQUIPO"
-  
-  "Problem solving;Critical thinking;Adaptability"
-    → "PROBLEM SOLVING; CRITICAL THINKING; ADAPTABILITY"
 """
 
 from servir.src.cleaning.parsers.text_parser import clean_text
@@ -25,7 +18,7 @@ def clean_competencies(raw_competencies):
     3. Return cleaned text
     
     Args:
-        raw_competencies: Raw competencies text from collection database
+        raw_competencies: Raw competencies text from extracting database
     
     Returns:
         str: Cleaned competencies text, or None if empty/invalid

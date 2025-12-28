@@ -1,15 +1,8 @@
 """
-Knowledge parser for processing phase.
+Knowledge parser for cleaning phase.
 
 Cleans knowledge/skills text field.
 Just cleaning - no classification logic.
-
-Examples:
-  "GESTIÓN PÚBLICA, LEGISLACIÓN LABORAL, LEY N° 30057" 
-    → "GESTIÓN PÚBLICA, LEGISLACIÓN LABORAL, LEY N° 30057"
-  
-  "  Excel;  Word;  PowerPoint  "
-    → "EXCEL; WORD; POWERPOINT"
 """
 
 from servir.src.cleaning.parsers.text_parser import clean_text
@@ -25,7 +18,7 @@ def clean_knowledge(raw_knowledge):
     3. Return cleaned text
     
     Args:
-        raw_knowledge: Raw knowledge text from collection database
+        raw_knowledge: Raw knowledge text from extracting database
     
     Returns:
         str: Cleaned knowledge text, or None if empty/invalid
