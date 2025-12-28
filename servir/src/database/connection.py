@@ -24,7 +24,7 @@ def get_db_path(db_type='extracting'):
         OSError: If unable to create directory structure
     """
     if db_type == 'extracting':
-        db_path = Path(__file__).parent.parent.parent / "data" / "raw" / "servir_jobs.db"
+        db_path = Path(__file__).parent.parent.parent / "data" / "raw" / "servir_jobs_raw.db"
     elif db_type == 'cleaning':
         db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_cleaned.db"
     elif db_type == 'transforming':
