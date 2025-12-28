@@ -45,7 +45,7 @@ def insert_transformed_job(job_data):
                 institution,
                 posting_start_date,
                 posting_end_date,
-                monthly_salary,
+                salary_amount,
                 number_of_vacancies,
                 contract_type,
                 contract_temporal_nature,
@@ -53,9 +53,9 @@ def insert_transformed_job(job_data):
                 experience_specific,
                 academic_level,
                 academic_field,
-                knowledge_items,
-                competencies_items,
-                specialization_items,
+                knowledge,
+                competencies,
+                specialization,
                 transformed_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
@@ -64,7 +64,7 @@ def insert_transformed_job(job_data):
             job_data.get('institution'),
             job_data.get('posting_start_date'),
             job_data.get('posting_end_date'),
-            job_data.get('monthly_salary'),
+            job_data.get('salary_amount'),
             job_data.get('number_of_vacancies'),
             job_data.get('contract_type'),
             job_data.get('contract_temporal_nature'),
@@ -72,9 +72,9 @@ def insert_transformed_job(job_data):
             job_data.get('experience_specific'),
             job_data.get('academic_level'),
             job_data.get('academic_field'),
-            job_data.get('knowledge_items'),
-            job_data.get('competencies_items'),
-            job_data.get('specialization_items'),
+            job_data.get('knowledge'),
+            job_data.get('competencies'),
+            job_data.get('specialization'),
             datetime.now()
         ))
         
