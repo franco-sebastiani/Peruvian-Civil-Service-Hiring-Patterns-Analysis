@@ -1,13 +1,13 @@
 """
-Job cleaner for processing pipeline.
+Job cleaner for cleaning pipeline.
 
 Applies all parsers to a single raw job and returns cleaned data.
 """
 
-from servir.src.cleaning.parsers.salary_parser import transform_salary
-from servir.src.cleaning.parsers.vacancy_parser import transform_vacancy
-from servir.src.cleaning.parsers.date_parser import transform_date
-from servir.src.cleaning.parsers.contract_parser import transform_contract_type
+from servir.src.cleaning.parsers.salary_parser import clean_salary
+from servir.src.cleaning.parsers.vacancy_parser import clean_vacancy
+from servir.src.cleaning.parsers.date_parser import clean_date
+from servir.src.cleaning.parsers.contract_parser import clean_contract_type
 from servir.src.cleaning.parsers.text_parser import clean_text
 from servir.src.cleaning.parsers.job_title_parser import clean_job_title
 from servir.src.cleaning.parsers.knowledge_parser import clean_knowledge
@@ -30,7 +30,7 @@ def clean_job(raw_job):
     6. Remove Roman numerals from job title (e.g., "ASISTENTE II" → "ASISTENTE")
     
     Args:
-        raw_job: dict with raw job data from collection database
+        raw_job: dict with raw job data from extracting database
     
     Returns:
         tuple: (cleaned_job_dict, failed_fields_list)
@@ -45,17 +45,17 @@ def clean_job(raw_job):
     
     try:
         # Parse salary
-        salary_result = transform_salary(raw_job.get('monthly_salary'))
+        salary_result = clean_salary(raw_job.get('monthly_salary'))
         
         # Parse vacancy
-        vacancy_result = transform_vacancy(raw_job.get('number_of_vacancies'))
+        vacancy_result = clean_vacancy(raw_job.get('number_of_vacancies'))
         
         # Parse dates
-        start_date_result = transform_date(raw_job.get('posting_start_date'))
-        end_date_result = transform_date(raw_job.get('posting_end_date'))
+        start_date_result = clean_date(raw_job.get('posting_start_date'))
+        end_date_result = clean_date(raw_job.get('posting_end_date'))
         
         # Parse contract type
-        contract_result = transform_contract_type(raw_job.get('contract_type_raw'))
+        contract_result = clean_contract_type(raw_job.get('contract_type_raw'))
         
         # Clean text fields using field-specific parsers
         # Job title: remove markers, gender, numerals, then generic cleaning
