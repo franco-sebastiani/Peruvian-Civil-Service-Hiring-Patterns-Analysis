@@ -1,5 +1,5 @@
 """
-Database query operations for SERVIR job postings.
+Database query operations for extracted job postings.
 
 Handles all read operations: fetching individual records, filtering,
 counting, and analytics. No write operations are performed here.
@@ -9,11 +9,11 @@ import sqlite3
 from servir.src.database.connection import get_connection, close_connection
 
 
-def job_exists(posting_unique_id):
+def extracted_job_exists(posting_unique_id):
     """
-    Check if a job posting already exists in the database.
+    Check if an extracted job already exists in the database.
     
-    Useful for avoiding duplicate scraping or checking before insert.
+    Useful for avoiding duplicate extraction or checking before insert.
     
     Args:
         posting_unique_id (str): Unique ID to check
@@ -21,7 +21,7 @@ def job_exists(posting_unique_id):
     Returns:
         bool: True if job exists, False otherwise
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return False
@@ -45,14 +45,14 @@ def job_exists(posting_unique_id):
         close_connection(conn)
 
 
-def get_job_count():
+def get_extracted_job_count():
     """
-    Get the total number of job postings in the database.
+    Get the total number of extracted job postings in the database.
     
     Returns:
-        int: Total count of job postings, or 0 if error
+        int: Total count of extracted jobs, or 0 if error
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return 0
@@ -73,9 +73,9 @@ def get_job_count():
         close_connection(conn)
 
 
-def get_job_by_id(posting_unique_id):
+def get_extracted_job_by_id(posting_unique_id):
     """
-    Retrieve a single job posting by its unique ID.
+    Retrieve a single extracted job posting by its unique ID.
     
     Args:
         posting_unique_id (str): Unique ID of the job
@@ -84,13 +84,13 @@ def get_job_by_id(posting_unique_id):
         dict or None: Job data as dictionary with column names as keys,
                      or None if not found
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return None
     
     try:
-        conn.row_factory = sqlite3.Row  # Return rows as dict-like objects
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
         cursor.execute("""
@@ -110,9 +110,9 @@ def get_job_by_id(posting_unique_id):
         close_connection(conn)
 
 
-def get_all_jobs(limit=None):
+def get_all_extracted_jobs(limit=None):
     """
-    Retrieve all job postings from the database.
+    Retrieve all extracted job postings from the database.
     
     Args:
         limit (int, optional): Maximum number of jobs to return.
@@ -122,7 +122,7 @@ def get_all_jobs(limit=None):
         list[dict]: List of job dictionaries, ordered by scrape time (newest first),
                    or empty list if error
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return []
@@ -148,9 +148,9 @@ def get_all_jobs(limit=None):
         close_connection(conn)
 
 
-def get_jobs_by_institution(institution_name):
+def get_extracted_jobs_by_institution(institution_name):
     """
-    Get all job postings from a specific institution.
+    Get all extracted jobs from a specific institution.
     
     Uses partial matching (LIKE query), so you can search with partial names.
     
@@ -160,7 +160,7 @@ def get_jobs_by_institution(institution_name):
     Returns:
         list[dict]: List of matching job dictionaries, or empty list if error
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return []
@@ -170,7 +170,7 @@ def get_jobs_by_institution(institution_name):
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT * FROM job_postings 
+            SELECT * FROM extracted_jobs 
             WHERE institution LIKE ?
             ORDER BY scraped_at DESC
         """, (f"%{institution_name}%",))
@@ -187,18 +187,18 @@ def get_jobs_by_institution(institution_name):
         close_connection(conn)
 
 
-def get_institution_counts():
+def get_extracted_institution_counts():
     """
-    Get count of job postings per institution.
+    Get count of extracted jobs per institution.
     
-    Useful for understanding which institutions post the most jobs.
+    Useful for understanding which institutions have the most jobs extracted.
     
     Returns:
         list[tuple]: List of (institution_name, count) tuples,
                     ordered by count descending (most jobs first),
                     or empty list if error
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return []
@@ -208,7 +208,7 @@ def get_institution_counts():
         
         cursor.execute("""
             SELECT institution, COUNT(*) as count 
-            FROM job_postings 
+            FROM extracted_jobs 
             GROUP BY institution 
             ORDER BY count DESC
         """)
@@ -225,9 +225,9 @@ def get_institution_counts():
         close_connection(conn)
 
 
-def get_recent_jobs(days=7):
+def get_recent_extracted_jobs(days=7):
     """
-    Get jobs scraped within the last N days.
+    Get jobs extracted within the last N days.
     
     Args:
         days (int): Number of days to look back (default: 7)
@@ -235,7 +235,7 @@ def get_recent_jobs(days=7):
     Returns:
         list[dict]: List of recent job dictionaries, or empty list if error
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return []
@@ -245,7 +245,7 @@ def get_recent_jobs(days=7):
         cursor = conn.cursor()
         
         cursor.execute("""
-            SELECT * FROM job_postings 
+            SELECT * FROM extracted_jobs 
             WHERE scraped_at >= datetime('now', '-' || ? || ' days')
             ORDER BY scraped_at DESC
         """, (days,))

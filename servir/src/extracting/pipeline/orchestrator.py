@@ -1,8 +1,8 @@
 """
-Main orchestrator for SERVIR job collection pipeline.
+Main orchestrator for SERVIR job extraction pipeline.
 
 Coordinates all pipeline modules (navigator, job_processor, statistics).
-Contains the core collection loop.
+Contains the core extraction loop.
 """
 
 from datetime import datetime
@@ -13,13 +13,13 @@ from servir.src.extracting.pipeline.navigator import get_total_pages, get_jobs_o
 from servir.src.extracting.pipeline.job_processor import extract_job_with_retry, decide_job_action
 from servir.src.extracting.pipeline.statistics import PipelineStats
 from servir.src.extracting.database.schema import initialize_database
-from servir.src.extracting.database.operations import insert_job_offer, insert_job_offer_incomplete
-from servir.src.extracting.database.queries import get_job_count, job_exists
+from servir.src.extracting.database.operations import insert_extracted_job, insert_extracted_job_incomplete
+from servir.src.extracting.database.queries import get_extracted_job_count, extracted_job_exists
 
 
 async def collect_all_servir_jobs():
     """
-    Main data collection orchestrator.
+    Main data extraction orchestrator.
     
     Coordinates:
     1. Database setup
@@ -30,11 +30,11 @@ async def collect_all_servir_jobs():
     6. Final reporting
     
     Returns:
-        PipelineStats: Statistics from the collection run
+        PipelineStats: Statistics from the extraction run
     """
     
     print("\n" + "="*70)
-    print("SERVIR JOB COLLECTION PIPELINE")
+    print("SERVIR JOB EXTRACTION PIPELINE")
     print("="*70)
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
@@ -47,13 +47,13 @@ async def collect_all_servir_jobs():
         print("Failed to initialize database. Stopping.")
         return None
     
-    initial_count = get_job_count()
+    initial_count = get_extracted_job_count()
     print(f"Database ready. Current count: {initial_count} jobs\n")
     
     # Initialize statistics
     stats = PipelineStats()
     
-    # Launch browser and start collection
+    # Launch browser and start extraction
     async with async_playwright() as p:
         browser = await p.firefox.launch()
         page = await browser.new_page()
@@ -75,7 +75,7 @@ async def collect_all_servir_jobs():
             
             print(f"Total pages: {total_pages}\n")
             print("-"*70)
-            print("SCRAPING JOBS")
+            print("EXTRACTING JOBS")
             print("-"*70 + "\n")
             
             # Main loop: page by page
@@ -121,26 +121,26 @@ async def collect_all_servir_jobs():
                         posting_id = decision['posting_id']
                         
                         # Check for duplicate
-                        if job_exists(posting_id):
+                        if extracted_job_exists(posting_id):
                             stats.record_duplicate()
                             outcome = "[DUPLICATE]"
                             
-                            # Consecutive duplicates detection (disabled)
+                            # Consecutive duplicates detection
                             if stats.consecutive_duplicates >= CONSECUTIVE_DUPLICATES_THRESHOLD:
                                 print(f"    Job {job_number}: {outcome}")
-                                print(f"\n  Reached previous collection point ({CONSECUTIVE_DUPLICATES_THRESHOLD} duplicates).")
+                                print(f"\n  Reached previous extraction point ({CONSECUTIVE_DUPLICATES_THRESHOLD} duplicates).")
                                 print(f"  Stopping to avoid wasting resources.\n")
                                 
                                 stats.finish()
                                 await browser.close()
                                 
-                                final_count = get_job_count()
+                                final_count = get_extracted_job_count()
                                 stats.print_summary(initial_count, final_count)
                                 
                                 return stats
                         else:
                             # Save to database
-                            success, msg = insert_job_offer(decision['data'])
+                            success, msg = insert_extracted_job(decision['data'])
                             if success:
                                 stats.record_job_saved_complete()
                                 outcome = "[OK]"
@@ -151,7 +151,7 @@ async def collect_all_servir_jobs():
                     
                     elif decision['action'] == 'ready_to_save_incomplete':
                         # Save incomplete job for manual review
-                        success, msg = insert_job_offer_incomplete(
+                        success, msg = insert_extracted_job_incomplete(
                             decision['data'], 
                             decision['missing_fields']
                         )
@@ -185,10 +185,10 @@ async def collect_all_servir_jobs():
     
     # Finish and report
     stats.finish()
-    final_count = get_job_count()
+    final_count = get_extracted_job_count()
     
     print("-"*70)
-    print("COLLECTION COMPLETE")
+    print("EXTRACTION COMPLETE")
     print("-"*70)
     print(f"Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     

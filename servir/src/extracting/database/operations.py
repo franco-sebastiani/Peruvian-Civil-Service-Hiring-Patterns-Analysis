@@ -1,7 +1,7 @@
 """
-Database write operations for SERVIR job postings.
+Database write operations for extracted job postings.
 
-Handles inserting, updating, and deleting job posting records.
+Handles inserting, updating, and deleting extracted job records.
 All functions return (success, message) tuples for clear error handling.
 """
 
@@ -10,12 +10,12 @@ from datetime import datetime
 from servir.src.database.connection import get_connection, close_connection
 
 
-def insert_job_offer(job_data):
+def insert_extracted_job(job_data):
     """
-    Insert a new job offer into the database.
+    Insert a new extracted job into the database.
     
     Args:
-        job_data (dict): Job offer data dictionary with field names as keys.
+        job_data (dict): Extracted job data dictionary with field names as keys.
                         Must include 'posting_unique_id' at minimum.
     
     Returns:
@@ -31,7 +31,7 @@ def insert_job_offer(job_data):
     if not job_data.get('posting_unique_id'):
         return False, "Missing required field: posting_unique_id"
     
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return False, "Failed to connect to database"
@@ -91,15 +91,16 @@ def insert_job_offer(job_data):
     finally:
         close_connection(conn)
 
-def insert_job_offer_incomplete(job_data, missing_fields):
+
+def insert_extracted_job_incomplete(job_data, missing_fields):
     """
-    Insert a job offer with missing fields into the incomplete table.
+    Insert an extracted job with missing fields into the incomplete table.
     
     Used for jobs that failed extraction and need manual review.
     Tracks which fields were missing and provides space for manual fixes.
     
     Args:
-        job_data (dict): Job offer data (may have None values)
+        job_data (dict): Extracted job data (may have None values)
         missing_fields (list): List of field names that are None
                               e.g., ['monthly_salary', 'number_of_vacancies']
     
@@ -113,7 +114,7 @@ def insert_job_offer_incomplete(job_data, missing_fields):
     if not job_data.get('posting_unique_id'):
         return False, "Missing required field: posting_unique_id"
     
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return False, "Failed to connect to database"
@@ -181,9 +182,9 @@ def insert_job_offer_incomplete(job_data, missing_fields):
         close_connection(conn)
 
 
-def update_job_offer(posting_unique_id, updated_fields):
+def update_extracted_job(posting_unique_id, updated_fields):
     """
-    Update an existing job offer in the database.
+    Update an existing extracted job in the database.
     
     Args:
         posting_unique_id (str): Unique ID of the job to update
@@ -196,7 +197,7 @@ def update_job_offer(posting_unique_id, updated_fields):
     if not updated_fields:
         return False, "No fields provided to update"
     
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return False, "Failed to connect to database"
@@ -208,7 +209,7 @@ def update_job_offer(posting_unique_id, updated_fields):
         set_clause = ", ".join([f"{field} = ?" for field in updated_fields.keys()])
         values = list(updated_fields.values()) + [posting_unique_id]
         
-        query = f"UPDATE job_postings SET {set_clause} WHERE posting_unique_id = ?"
+        query = f"UPDATE extracted_jobs SET {set_clause} WHERE posting_unique_id = ?"
         cursor.execute(query, values)
         
         conn.commit()
@@ -225,9 +226,9 @@ def update_job_offer(posting_unique_id, updated_fields):
         close_connection(conn)
 
 
-def delete_job_offer(posting_unique_id):
+def delete_extracted_job(posting_unique_id):
     """
-    Delete a job offer from the database.
+    Delete an extracted job from the database.
     
     Args:
         posting_unique_id (str): Unique ID of the job to delete
@@ -235,7 +236,7 @@ def delete_job_offer(posting_unique_id):
     Returns:
         tuple: (success: bool, message: str)
     """
-    conn = get_connection()
+    conn = get_connection(db_type='extracting')
     
     if not conn:
         return False, "Failed to connect to database"
@@ -244,7 +245,7 @@ def delete_job_offer(posting_unique_id):
         cursor = conn.cursor()
         
         cursor.execute("""
-            DELETE FROM job_postings 
+            DELETE FROM extracted_jobs 
             WHERE posting_unique_id = ?
         """, (posting_unique_id,))
         
