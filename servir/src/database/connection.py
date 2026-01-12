@@ -26,9 +26,9 @@ def get_db_path(db_type='extracting'):
     if db_type == 'extracting':
         db_path = Path(__file__).parent.parent.parent / "data" / "raw" / "servir_jobs_raw.db"
     elif db_type == 'cleaning':
-        db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_cleaned.db"
+        db_path = Path(__file__).parent.parent.parent / "data" / "cleaned" / "servir_jobs_cleaned.db"
     elif db_type == 'transforming':
-        db_path = Path(__file__).parent.parent.parent / "data" / "processed" / "servir_jobs_transformed.db"
+        db_path = Path(__file__).parent.parent.parent / "data" / "transformed" / "servir_jobs_transformed.db"
     else:
         raise ValueError(f"Invalid db_type: {db_type}. Must be 'extracting', 'cleaning', or 'transforming'")
     
