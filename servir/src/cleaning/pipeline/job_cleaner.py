@@ -4,6 +4,7 @@ Job cleaner for cleaning pipeline.
 Applies all parsers to a single raw job and returns cleaned data.
 """
 
+from servir.src.cleaning.parsers.posting_id_parser import parse_posting_id
 from servir.src.cleaning.parsers.salary_parser import clean_salary
 from servir.src.cleaning.parsers.vacancy_parser import clean_vacancy
 from servir.src.cleaning.parsers.date_parser import clean_date
@@ -22,12 +23,13 @@ def clean_job(raw_job):
     Clean a single raw job by applying all parsers.
     
     Processing steps:
-    1. Parse salary → standardized amount
-    2. Parse vacancy → integer count
-    3. Parse dates → ISO format
-    4. Parse contract type → standardized category
-    5. Clean text fields → trimmed, punctuation removed
-    6. Remove Roman numerals from job title (e.g., "ASISTENTE II" → "ASISTENTE")
+    1. Parse posting ID → integer
+    2. Parse salary → standardized amount
+    3. Parse vacancy → integer count
+    4. Parse dates → ISO format
+    5. Parse contract type → standardized category
+    6. Clean text fields → trimmed, punctuation removed
+    7. Remove Roman numerals from job title (e.g., "ASISTENTE II" → "ASISTENTE")
     
     Args:
         raw_job: dict with raw job data from extracting database
@@ -38,9 +40,10 @@ def clean_job(raw_job):
             - failed_fields_list: list of fields that are None after parsing
     """
     
-    posting_id = raw_job.get('posting_unique_id')
-    
-    if not posting_id:
+    # Parse posting ID first (required field)
+    try:
+        posting_id = parse_posting_id(raw_job.get('posting_unique_id'))
+    except (ValueError, TypeError):
         return None, ['posting_unique_id']
     
     try:
@@ -73,7 +76,7 @@ def clean_job(raw_job):
         
         # Build cleaned job
         cleaned_job = {
-            'posting_unique_id': posting_id,
+            'posting_unique_id': posting_id,  # Now INTEGER
             'job_title': title_result,
             'institution': institution_result,
             'posting_start_date': start_date_result['date_iso'],
