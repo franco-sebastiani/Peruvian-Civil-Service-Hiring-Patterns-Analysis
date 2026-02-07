@@ -19,7 +19,7 @@ def clean_job_title(raw_title):
     
     Process:
     1. Remove quantity prefixes (UN/A, UNA, UN, UNOS, UNAS)
-    2. Remove position/level numbers ((1), 1, 2, etc.)
+    2. Remove position/level numbers ((1), 1, 2, 1.2., etc.)
     3. Remove gender markers ((A), (O), /A, /O)
     4. Remove Roman numerals (I, II, III, IV, etc.)
     5. Apply generic text cleaning (trim, quotes, punctuation, spaces)
@@ -43,10 +43,10 @@ def clean_job_title(raw_title):
         cleaned = re.sub(r'^(UN/A|UNA|UNAS|UNOS|UN)\s+', '', cleaned, flags=re.IGNORECASE)
         
         # Step 2: Remove position/level numbers
-        # Matches: (1), (2), 1, 2, 01, 02, etc. at start, middle, or end
-        # Also handles numbers followed by dots: "1.", "13.", etc.
-        cleaned = re.sub(r'^\(?\d+\)?[\s.]*', '', cleaned)  # (1), 1, or 1. at start
-        cleaned = re.sub(r'\s+\(?\d+\)?[\s.]*', ' ', cleaned)  # 1 or (1) with dot/space
+        # Matches: (1), (2), 1, 2, 01, 02, 1.2., 1.2.3, etc. at start
+        # Pattern: Remove all leading digits, dots, parens, colons, tabs, spaces
+        cleaned = re.sub(r'^[\(\d\).:\s\t]+', '', cleaned)
+        cleaned = re.sub(r'\s+\(?\d+\)?[\s.]*', ' ', cleaned)  # 1 or (1) with dot/space in middle
         cleaned = re.sub(r'[\s.]+\(?\d+\)?\s*$', '', cleaned)  # 1 or (1) at end
         
         # Step 3: Remove gender markers
