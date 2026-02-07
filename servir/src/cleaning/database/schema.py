@@ -32,7 +32,7 @@ def initialize_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS cleaned_jobs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                posting_unique_id TEXT UNIQUE NOT NULL,
+                posting_unique_id INTEGER UNIQUE NOT NULL,
                 job_title TEXT,
                 institution TEXT,
                 posting_start_date TEXT,
@@ -53,7 +53,7 @@ def initialize_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS cleaned_jobs_incomplete (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                posting_unique_id TEXT UNIQUE NOT NULL,
+                posting_unique_id INTEGER UNIQUE NOT NULL,
                 job_title TEXT,
                 institution TEXT,
                 posting_start_date TEXT,
