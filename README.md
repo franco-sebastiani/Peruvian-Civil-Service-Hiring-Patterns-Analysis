@@ -80,3 +80,13 @@ Peruvian-Civil-Service-Hiring-Patterns-Analysis/
 - Separate databases for each processing phase, enabling traceability and reproducibility
 - Robust data standardisation (contract type normalisation, text standardisation, NULL handling)
 - Streamlit-based interface for manual data annotation and training data creation
+
+
+## Data Sources
+
+### ISCO-08 Peru Classification
+- **File:** `data/reference/isco_08_peru.csv`
+- **Source:** (https://cdn.www.gob.pe/uploads/document/file/4841890/Listado%20de%20Ocupaciones.xlsx?v=1689349996)
+- **Retrieved:** 04-02-2026
+- **Processing:** Loaded into `isco_08_peru.db` via `src/load_isco_08_to_sqlite.py`
+- **Description:** Peruvian ISCO-08 occupational classification from Instituto Nacional de Estadística e Informática
