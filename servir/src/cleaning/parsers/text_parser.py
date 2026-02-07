@@ -53,14 +53,14 @@ def clean_text(text_str, trim=True, remove_quotes=True, remove_punctuation=True,
         if remove_quotes:
             cleaned = cleaned.strip('"\'')
         
-        # Step 3: Remove inverted punctuation (¿, ¡) from start and end
+        # Step 3: Remove inverted punctuation (¿, ¡) and leading punctuation from start and end
         if remove_punctuation:
             cleaned = re.sub(r'^[¿¡\s]+', '', cleaned)
             cleaned = re.sub(r'[¿¡\s]+$', '', cleaned)
             
-            # Remove leading bullets/dashes followed by whitespace
-            # Matches: "- ", "– ", "• ", "* " at start of lines
-            cleaned = re.sub(r'^[\s\-–•*]+', '', cleaned, flags=re.MULTILINE)
+            # Remove leading bullets/dashes/periods followed by whitespace
+            # Matches: "- ", "– ", "• ", "* ", ". " at start of lines
+            cleaned = re.sub(r'^[\s\-–•*.]+', '', cleaned, flags=re.MULTILINE)
         
         # Step 4: Final trim after punctuation removal
         cleaned = cleaned.strip()
