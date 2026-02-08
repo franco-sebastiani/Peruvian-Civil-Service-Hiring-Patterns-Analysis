@@ -33,7 +33,7 @@ class JobTitleTransformer:
         Initialize transformer with database paths.
         
         Args:
-            cleaned_db_path: Path to servir_cleaned.db
+            cleaned_db_path: Path to servir_jobs_cleaned.db
             isco_db_path: Path to isco_08_peru.db
             validation_db_path: Path to job_title_validation.db (output)
         """
@@ -201,7 +201,7 @@ class JobTitleTransformer:
         
         # Create table if it doesn't exist (don't drop it!)
         conn.execute("""
-        CREATE TABLE IF NOT EXISTS fuzzy_matches (
+        CREATE TABLE IF NOT EXISTS job_title_matches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             job_title TEXT NOT NULL,
             candidate_codigo TEXT NOT NULL,
@@ -220,7 +220,7 @@ class JobTitleTransformer:
         
         # Get list of job titles that are ALREADY VALIDATED (don't touch these)
         cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT job_title FROM fuzzy_matches WHERE validated = 1")
+        cursor.execute("SELECT DISTINCT job_title FROM job_title_matches WHERE validated = 1")
         validated_titles = set(row[0] for row in cursor.fetchall())
         
         if validated_titles:
@@ -239,15 +239,15 @@ class JobTitleTransformer:
         # Delete old unvalidated matches for these titles (in case of rerun)
         new_titles = tuple(new_results['job_title'].unique())
         if len(new_titles) == 1:
-            conn.execute(f"DELETE FROM fuzzy_matches WHERE job_title = ? AND validated = 0", new_titles)
+            conn.execute(f"DELETE FROM job_title_matches WHERE job_title = ? AND validated = 0", new_titles)
         else:
             placeholders = ','.join('?' * len(new_titles))
-            conn.execute(f"DELETE FROM fuzzy_matches WHERE job_title IN ({placeholders}) AND validated = 0", new_titles)
+            conn.execute(f"DELETE FROM job_title_matches WHERE job_title IN ({placeholders}) AND validated = 0", new_titles)
         
         # Insert new results
         for _, row in new_results.iterrows():
             conn.execute("""
-            INSERT INTO fuzzy_matches 
+            INSERT INTO job_title_matches 
             (job_title, candidate_codigo, candidate_descripcion, semantic_confidence, fuzzy_confidence, best_confidence, rank)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (
