@@ -179,3 +179,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Large data files - MEF Budget Data
+# 7GB CSV file and processed database not tracked in version control
+# Users download separately following README instructions
+servir/data/reference/MEF_budget/*.csv
+servir/data/reference/MEF_budget/*.db
+servir/data/reference/MEF_budget/comparativo_gastos_*.csv
