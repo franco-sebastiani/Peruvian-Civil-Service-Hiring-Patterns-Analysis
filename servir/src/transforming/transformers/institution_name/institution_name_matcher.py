@@ -1,14 +1,14 @@
 """
-Institution Transformer - Orchestrator for matching SERVIR institutions to MEF.
+Institution Name Matcher - Orchestrator for matching SERVIR institutions to MEF.
 
 Pipeline:
 1. Load SERVIR institutions from cleaned database
-2. Fetch MEF institution catalog from API (2025 data)
+2. Load MEF institution catalog from local database
 3. Score each SERVIR institution against ALL MEF institutions using:
    - Semantic similarity
    - Fuzzy matching
 4. Store ALL MEF identifiers (nivel_gobierno, sector, pliego, ejecutora, etc.)
-5. Save to institution_validation.db for manual validation
+5. Save to institution_name_matches.db for manual validation
 
 Output: Comprehensive lookup table linking SERVIR ↔ MEF with all institutional IDs.
 """
@@ -31,21 +31,21 @@ sys.path.insert(0, str(project_root))
 from servir.data.transformed.institution_name import operations
 
 
-class InstitutionTransformer:
-    """Transform SERVIR institutions by matching to MEF institution catalog."""
+class InstitutionNameMatcher:
+    """Match SERVIR institutions to MEF institution catalog using dual approach."""
     
-    def __init__(self, cleaned_db_path, mef_db_path, validation_db_path):
+    def __init__(self, cleaned_db_path, mef_db_path, matches_db_path):
         """
-        Initialize transformer with database paths.
+        Initialize matcher with database paths.
         
         Args:
             cleaned_db_path: Path to servir_jobs_cleaned.db
             mef_db_path: Path to mef_budget.db (local MEF database)
-            validation_db_path: Path to institution_validation.db (output)
+            matches_db_path: Path to institution_name_matches.db (output)
         """
         self.cleaned_db_path = Path(cleaned_db_path)
         self.mef_db_path = Path(mef_db_path)
-        self.validation_db_path = Path(validation_db_path)
+        self.matches_db_path = Path(matches_db_path)
         
         # Load MEF institution catalog from local database
         print(f"\nLoading MEF institution catalog from: {mef_db_path}...")
@@ -128,20 +128,25 @@ class InstitutionTransformer:
         
         return ranked
     
-    def transform(self):
+    def match(self, sample_size=None):
         """
-        Transform all SERVIR institutions and save results.
+        Match SERVIR institutions to MEF and save results.
         
         Process:
         1. Load SERVIR institutions
-        2. Check which already exist in validation DB
-        3. Match only NEW institutions
-        4. Save comprehensive results with all MEF identifiers
+        2. Optionally sample a subset for testing
+        3. Check which already exist in matches DB
+        4. Match only NEW institutions
+        5. Save comprehensive results with all MEF identifiers
+        
+        Args:
+            sample_size (int): If provided, randomly sample this many institutions.
+                              If None, process all institutions.
         """
         # Get processing status
         status = operations.get_processing_status(
             self.cleaned_db_path,
-            self.validation_db_path
+            self.matches_db_path
         )
         
         all_institutions = status['all_institutions']
@@ -151,11 +156,16 @@ class InstitutionTransformer:
         print(f"\nLoaded {len(all_institutions)} unique institutions from SERVIR")
         
         if len(existing_institutions) > 0:
-            print(f"Found {len(existing_institutions)} institutions already in validation DB")
+            print(f"Found {len(existing_institutions)} institutions already in matches DB")
         
         if len(institutions_to_process) == 0:
-            print("\n✓ All institutions already in validation DB. Nothing to process!")
+            print("\n✓ All institutions already in matches DB. Nothing to process!")
             return pd.DataFrame()
+        
+        # Apply sampling if requested
+        if sample_size and sample_size < len(institutions_to_process):
+            institutions_to_process = institutions_to_process.sample(n=sample_size, random_state=42)
+            print(f"Sampling {sample_size} random institutions for processing...")
         
         print(f"\nProcessing {len(institutions_to_process)} NEW institutions...")
         all_results = []
@@ -173,12 +183,12 @@ class InstitutionTransformer:
         results_df = pd.DataFrame(all_results)
         
         # Save to database using operations module
-        operations.save_matches(self.validation_db_path, results_df)
+        operations.save_matches(self.matches_db_path, results_df)
         
-        print(f"\n✓ Transformation complete!")
+        print(f"\n✓ Matching complete!")
         print(f"  - Processed {len(institutions_to_process)} unique institutions")
         print(f"  - Created {len(results_df)} match candidates")
-        print(f"  - Saved to {self.validation_db_path}")
+        print(f"  - Saved to {self.matches_db_path}")
         
         return results_df
 
@@ -198,21 +208,21 @@ if __name__ == "__main__":
     
     CLEANED_DB = project_root / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"
     MEF_DB = project_root / "servir" / "data" / "reference" / "MEF_budget" / "mef_budget.db"
-    VALIDATION_DB = project_root / "servir" / "data" / "transformed" / "institution_name" / "institution_validation.db"
+    MATCHES_DB = project_root / "servir" / "data" / "transformed" / "institution_name" / "institution_name_matches.db"
     
     print(f"\nDatabase paths:")
     print(f"  Cleaned DB: {CLEANED_DB}")
     print(f"  MEF DB: {MEF_DB}")
-    print(f"  Validation DB: {VALIDATION_DB}")
+    print(f"  Matches DB: {MATCHES_DB}")
     print(f"\nFile existence:")
     print(f"  Cleaned DB exists: {CLEANED_DB.exists()}")
     print(f"  MEF DB exists: {MEF_DB.exists()}")
     
     if not MEF_DB.exists():
         print("\n✗ MEF database not found!")
-        print("Run this first: python servir/data/reference/MEF_presupuesto/load_mef_to_sqlite.py")
+        print("Run this first: python servir/data/reference/MEF_budget/load_mef_to_sqlite.py")
         sys.exit(1)
     
-    # Transform
-    transformer = InstitutionTransformer(CLEANED_DB, MEF_DB, VALIDATION_DB)
-    results = transformer.transform()
+    # Match
+    matcher = InstitutionNameMatcher(CLEANED_DB, MEF_DB, MATCHES_DB)
+    results = matcher.match()  # Or: matcher.match(sample_size=50)

@@ -1,5 +1,5 @@
 """
-Database operations for institution validation.
+Database operations for institution name matching.
 
 High-level operations that combine queries with transaction management.
 """
@@ -9,24 +9,24 @@ from pathlib import Path
 from . import schema, queries
 
 
-def initialize_validation_db(validation_db_path):
+def initialize_matches_db(matches_db_path):
     """
-    Create validation database and tables if they don't exist.
+    Create matches database and tables if they don't exist.
     
     Args:
-        validation_db_path (Path): Path to institution_validation.db
+        matches_db_path (Path): Path to institution_name_matches.db
     """
-    validation_db_path.parent.mkdir(parents=True, exist_ok=True)
+    matches_db_path.parent.mkdir(parents=True, exist_ok=True)
     
-    conn = sqlite3.connect(validation_db_path)
+    conn = sqlite3.connect(matches_db_path)
     conn.execute(schema.CREATE_INSTITUTION_MATCHES_TABLE)
     conn.commit()
     conn.close()
 
 
-def save_matches(validation_db_path, results_df):
+def save_matches(matches_db_path, results_df):
     """
-    Save institution match results to validation database.
+    Save institution match results to matches database.
     
     Handles:
     - Creating database/tables if needed
@@ -35,7 +35,7 @@ def save_matches(validation_db_path, results_df):
     - Transaction management
     
     Args:
-        validation_db_path (Path): Path to institution_validation.db
+        matches_db_path (Path): Path to institution_name_matches.db
         results_df (DataFrame): Match results to save
     """
     if len(results_df) == 0:
@@ -43,9 +43,9 @@ def save_matches(validation_db_path, results_df):
         return
     
     # Ensure database exists
-    initialize_validation_db(validation_db_path)
+    initialize_matches_db(matches_db_path)
     
-    conn = sqlite3.connect(validation_db_path)
+    conn = sqlite3.connect(matches_db_path)
     
     try:
         # Delete old unvalidated matches for these institutions
@@ -67,13 +67,13 @@ def save_matches(validation_db_path, results_df):
         conn.close()
 
 
-def get_processing_status(cleaned_db_path, validation_db_path):
+def get_processing_status(cleaned_db_path, matches_db_path):
     """
     Determine which institutions need processing.
     
     Args:
         cleaned_db_path (Path): Path to servir_jobs_cleaned.db
-        validation_db_path (Path): Path to institution_validation.db
+        matches_db_path (Path): Path to institution_name_matches.db
     
     Returns:
         dict with 'all_institutions', 'existing_institutions', 'institutions_to_process'
@@ -81,8 +81,8 @@ def get_processing_status(cleaned_db_path, validation_db_path):
     # Load all SERVIR institutions
     all_institutions_df = queries.load_servir_institutions(cleaned_db_path)
     
-    # Get institutions already in validation DB
-    existing_institutions = queries.get_existing_institutions(validation_db_path)
+    # Get institutions already in matches DB
+    existing_institutions = queries.get_existing_institutions(matches_db_path)
     
     # Filter to only new institutions
     institutions_to_process = all_institutions_df[

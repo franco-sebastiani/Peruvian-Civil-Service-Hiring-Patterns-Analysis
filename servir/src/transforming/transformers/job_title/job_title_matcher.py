@@ -1,14 +1,14 @@
 """
-Job Title Transformer - Main orchestrator for matching job titles to ISCO-08.
+Job Title Matcher - Main orchestrator for matching job titles to ISCO-08.
 
 Pipeline:
 1. Read cleaned job titles from servir_jobs_cleaned.db
-2. Extract unique titles
+2. Extract unique titles (optionally sample)
 3. Load ALL ISCO-08 nivel 4 codes
 4. Score EVERY ISCO code against each job title using:
    - Semantic similarity
    - Fuzzy matching
-5. Save ALL scores to job_title_validation.db for manual validation
+5. Save ALL scores to job_title_matches.db for manual validation
 
 CLEAN ARCHITECTURE:
 - This file: Pure business logic (matching algorithms)
@@ -35,21 +35,21 @@ sys.path.insert(0, str(project_root))
 from servir.data.transformed.job_title import operations, queries
 
 
-class JobTitleTransformer:
-    """Transform job titles by matching them to ISCO-08 categories."""
+class JobTitleMatcher:
+    """Match job titles to ISCO-08 categories using dual semantic + fuzzy approach."""
     
-    def __init__(self, cleaned_db_path, isco_db_path, validation_db_path):
+    def __init__(self, cleaned_db_path, isco_db_path, matches_db_path):
         """
-        Initialize transformer with database paths.
+        Initialize matcher with database paths.
         
         Args:
             cleaned_db_path: Path to servir_jobs_cleaned.db
             isco_db_path: Path to isco_08_peru.db
-            validation_db_path: Path to job_title_validation.db (output)
+            matches_db_path: Path to job_title_matches.db (output)
         """
         self.cleaned_db_path = Path(cleaned_db_path)
         self.isco_db_path = Path(isco_db_path)
-        self.validation_db_path = Path(validation_db_path)
+        self.matches_db_path = Path(matches_db_path)
         
         # Initialize matchers
         print("Initializing matchers...")
@@ -109,20 +109,25 @@ class JobTitleTransformer:
         
         return ranked
     
-    def transform(self):
+    def match(self, sample_size=None):
         """
-        Transform all cleaned job titles and save results.
+        Match job titles to ISCO codes and save results.
         
         Process:
         1. Load unique cleaned titles
-        2. Check which already exist in validation DB
-        3. Match only NEW titles that don't exist yet
-        4. Save to validation database
+        2. Optionally sample a subset for testing
+        3. Check which already exist in matches DB
+        4. Match only NEW titles that don't exist yet
+        5. Save to matches database
+        
+        Args:
+            sample_size (int): If provided, randomly sample this many titles.
+                              If None, process all titles.
         """
         # Get processing status
         status = operations.get_processing_status(
             self.cleaned_db_path,
-            self.validation_db_path
+            self.matches_db_path
         )
         
         all_titles = status['all_titles']
@@ -132,11 +137,16 @@ class JobTitleTransformer:
         print(f"\nLoaded {len(all_titles)} unique job titles from cleaned database")
         
         if len(existing_titles) > 0:
-            print(f"Found {len(existing_titles)} job titles already in validation DB")
+            print(f"Found {len(existing_titles)} job titles already in matches DB")
         
         if len(titles_to_process) == 0:
-            print("\n✓ All job titles already in validation DB. Nothing to process!")
+            print("\n✓ All job titles already in matches DB. Nothing to process!")
             return pd.DataFrame()
+        
+        # Apply sampling if requested
+        if sample_size and sample_size < len(titles_to_process):
+            titles_to_process = titles_to_process.sample(n=sample_size, random_state=42)
+            print(f"Sampling {sample_size} random titles for processing...")
         
         print(f"\nProcessing {len(titles_to_process)} NEW titles...")
         all_results = []
@@ -162,12 +172,12 @@ class JobTitleTransformer:
         results_df = pd.DataFrame(all_results)
         
         # Save to database using operations module
-        operations.save_matches(self.validation_db_path, results_df)
+        operations.save_matches(self.matches_db_path, results_df)
         
-        print(f"\n✓ Transformation complete!")
+        print(f"\n✓ Matching complete!")
         print(f"  - Processed {len(titles_to_process)} unique titles")
         print(f"  - Created {len(results_df)} match candidates")
-        print(f"  - Saved to {self.validation_db_path}")
+        print(f"  - Saved to {self.matches_db_path}")
         
         return results_df
 
@@ -187,16 +197,16 @@ if __name__ == "__main__":
     
     CLEANED_DB = project_root / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"
     ISCO_DB = project_root / "servir" / "data" / "reference" / "isco_08_peru.db"
-    VALIDATION_DB = project_root / "servir" / "data" / "transformed" / "job_title" / "job_title_validation.db"
+    MATCHES_DB = project_root / "servir" / "data" / "transformed" / "job_title" / "job_title_matches.db"
     
     print(f"\nDatabase paths:")
     print(f"  Cleaned DB: {CLEANED_DB}")
     print(f"  ISCO DB: {ISCO_DB}")
-    print(f"  Validation DB: {VALIDATION_DB}")
+    print(f"  Matches DB: {MATCHES_DB}")
     print(f"\nFile existence:")
     print(f"  Cleaned DB exists: {CLEANED_DB.exists()}")
     print(f"  ISCO DB exists: {ISCO_DB.exists()}")
     
-    # Transform
-    transformer = JobTitleTransformer(CLEANED_DB, ISCO_DB, VALIDATION_DB)
-    results = transformer.transform()
+    # Match
+    matcher = JobTitleMatcher(CLEANED_DB, ISCO_DB, MATCHES_DB)
+    results = matcher.match()  # Or: matcher.match(sample_size=100)

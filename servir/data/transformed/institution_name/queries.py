@@ -3,7 +3,7 @@ SQL queries for institution validation.
 
 Handles:
 - Loading institutions from SERVIR cleaned database
-- Loading MEF institution catalog from LOCAL DATABASE
+- Loading MEF institution catalog from LOCAL DATABASE (not API - UK access blocked)
 - Database read/write operations
 """
 
@@ -34,6 +34,7 @@ def load_mef_institutions(mef_db_path):
     """
     Load MEF institution catalog from local database.
     
+    This replaces the API calls since API access is blocked from UK.
     Database created by load_mef_to_sqlite.py script.
     
     Args:
@@ -79,20 +80,20 @@ def load_mef_institutions(mef_db_path):
     return df
 
 
-def get_existing_institutions(validation_db_path):
+def get_existing_institutions(matches_db_path):
     """
-    Get list of SERVIR institutions already in validation database.
+    Get list of SERVIR institutions already in matches database.
     
     Args:
-        validation_db_path (Path): Path to institution_validation.db
+        matches_db_path (Path): Path to institution_name_matches.db
     
     Returns:
         set of institution name strings
     """
-    if not validation_db_path.exists():
+    if not matches_db_path.exists():
         return set()
     
-    conn = sqlite3.connect(validation_db_path)
+    conn = sqlite3.connect(matches_db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT servir_institution_name FROM institution_matches")
     existing = set(row[0] for row in cursor.fetchall())

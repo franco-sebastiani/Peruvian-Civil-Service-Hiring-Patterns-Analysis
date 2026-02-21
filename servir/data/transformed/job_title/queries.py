@@ -1,5 +1,5 @@
 """
-SQL queries for job title validation database operations.
+SQL queries for job title matching database operations.
 
 All database read/write queries are centralized here.
 """
@@ -45,20 +45,20 @@ def load_cleaned_titles(cleaned_db_path):
     return df
 
 
-def get_existing_titles(validation_db_path):
+def get_existing_titles(matches_db_path):
     """
-    Get list of job titles that already exist in validation database.
+    Get list of job titles that already exist in matches database.
     
     Args:
-        validation_db_path (Path): Path to job_title_validation.db
+        matches_db_path (Path): Path to job_title_matches.db
     
     Returns:
         set of job title strings
     """
-    if not validation_db_path.exists():
+    if not matches_db_path.exists():
         return set()
     
-    conn = sqlite3.connect(validation_db_path)
+    conn = sqlite3.connect(matches_db_path)
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT job_title FROM job_title_matches")
     existing_titles = set(row[0] for row in cursor.fetchall())

@@ -1,5 +1,5 @@
 """
-Database schema for job title validation.
+Database schema for job title matching.
 
 Defines table structures for storing ISCO-08 matching results.
 """

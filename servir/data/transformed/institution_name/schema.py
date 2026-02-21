@@ -1,5 +1,5 @@
 """
-Database schema for institution validation.
+Database schema for institution name matching.
 
 Defines table structure for storing comprehensive institution matching results
 linking SERVIR institutions to MEF budget database identifiers.
