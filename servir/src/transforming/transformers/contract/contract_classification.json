@@ -1,0 +1,30 @@
+{
+  "D.LEG 1057 DETERMINADO NECESIDAD TRANSITORIA": {
+    "regime": "D.LEG 1057",
+    "temporal_nature": "TEMPORARY"
+  },
+  "D.LEG 1057 DETERMINADO SUPLENCIA": {
+    "regime": "D.LEG 1057",
+    "temporal_nature": "TEMPORARY"
+  },
+  "D.LEG 1057 INDETERMINADO": {
+    "regime": "D.LEG 1057",
+    "temporal_nature": "PERMANENT"
+  },
+  "D.LEG 728": {
+    "regime": "D.LEG 728",
+    "temporal_nature": "PERMANENT"
+  },
+  "D.LEG 276": {
+    "regime": "D.LEG 276",
+    "temporal_nature": "PERMANENT"
+  },
+  "DOCENTES UNIVERSITARIOS LEY 30220": {
+    "regime": "LEY 30220",
+    "temporal_nature": "PERMANENT"
+  },
+  "LEY 30057": {
+    "regime": "LEY 30057",
+    "temporal_nature": "PERMANENT"
+  }
+}
