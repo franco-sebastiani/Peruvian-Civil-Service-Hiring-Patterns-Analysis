@@ -12,7 +12,7 @@ REPO_ROOT = Path("/Users/francosebastiani/GitHub/Peruvian Civil Service Hiring P
 sys.path.insert(0, str(REPO_ROOT))
 
 # Import transformer
-from servir.src.transforming.transformers.job_title_transformer.job_title_transformer import JobTitleTransformer
+from servir.src.transforming.transformers.job_title.job_title_matcher import JobTitleTransformer
 
 # Paths
 CLEANED_DB = REPO_ROOT / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"

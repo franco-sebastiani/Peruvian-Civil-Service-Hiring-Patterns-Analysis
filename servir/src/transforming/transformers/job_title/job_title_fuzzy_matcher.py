@@ -33,7 +33,7 @@ class JobTitleFuzzyMatcher:
         
         query = """
         SELECT codigo, descripcion 
-        FROM grupos_primarios
+        FROM isco_level_4
         ORDER BY codigo
         """
         
