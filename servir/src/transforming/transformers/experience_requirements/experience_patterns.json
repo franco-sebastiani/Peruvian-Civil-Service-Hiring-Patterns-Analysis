@@ -1,0 +1,38 @@
+{
+  "general_years_patterns": [
+    "EXPERIENCIA\\s+GENERAL[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "EXPERIENCIA\\s+LABORAL\\s+GENERAL[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "EXPERIENCIA\\s+PROFESIONAL\\s+GENERAL[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "EXP\\s+GENERAL[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "GENERAL[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?"
+  ],
+  "specific_years_patterns": [
+    "EXPERIENCIA\\s+ESPEC[ÍI]FICA[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "EXPERIENCIA\\s+LABORAL\\s+ESPEC[ÍI]FICA[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "EXP\\s+ESPEC[ÍI]FICA[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?",
+    "ESPEC[ÍI]FICA[:\\s]+.*?(\\d+)\\s*AÑ[OO]S?"
+  ],
+  "total_years_patterns": [
+    "M[ÍI]NIMA?\\s+DE\\s+(\\d+)\\s*AÑ[OO]S?",
+    "NO\\s+MENOR\\s+[AD]E?\\s+(\\d+)\\s*AÑ[OO]S?",
+    "(\\d+)\\s*AÑ[OO]S?\\s+EN\\s+EL\\s+SECTOR"
+  ],
+  "sector_public_keywords": [
+    "SECTOR PÚBLICO",
+    "SECTOR PUBLICO",
+    "PÚBLICO",
+    "PUBLICO",
+    "SECTOR PÚBLICO Y/O PRIVADO",
+    "SECTOR PUBLICO Y/O PRIVADO"
+  ],
+  "sector_private_keywords": [
+    "SECTOR PRIVADO",
+    "PRIVADO",
+    "SECTOR PÚBLICO Y/O PRIVADO",
+    "SECTOR PUBLICO Y/O PRIVADO"
+  ],
+  "no_experience_keywords": [
+    "SIN EXPERIENCIA",
+    "NO REQUIERE EXPERIENCIA"
+  ]
+}
