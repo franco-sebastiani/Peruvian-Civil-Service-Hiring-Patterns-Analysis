@@ -1,0 +1,25 @@
+SERVIR JOBS TRANSFORMED - EXPLORATORY DATA ANALYSIS
+================================================================================
+
+Dataset Shape: 21,575 rows × 80 columns
+Memory Usage: 52.96 MB
+
+Matching Coverage:
+            Metric  Count   Percent
+         ISCO Code  17264 80.018540
+   MEF Institution  17744 82.243337
+  Academic Program   7128 33.038239
+Full Match (all 3)   6718 31.137891
+
+Missing Data (top 10):
+                   Column  Missing  Percent
+experience_specific_years    18448     85.5
+ experience_general_years    16621     77.0
+   campo_detallado_codigo    14447     67.0
+          programa_codigo    14447     67.0
+                isco_code     4311     20.0
+         ejecutora_nombre     3831     17.8
+                ejecutora     3831     17.8
+                 sec_ejec     3831     17.8
+                   pliego     3831     17.8
+                   sector     3831     17.8
