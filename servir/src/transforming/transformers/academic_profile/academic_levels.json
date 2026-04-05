@@ -1,0 +1,91 @@
+{
+  "level_patterns": {
+    "SECUNDARIA COMPLETA": {
+      "search_levels": [],
+      "level_name": "Secundaria",
+      "thesis_required": 0
+    },
+    "TECNICO": {
+      "search_levels": [3, 4, 5],
+      "level_name": "Técnico",
+      "thesis_required": 0
+    },
+    "TITULO TECNICO": {
+      "search_levels": [3, 4, 5],
+      "level_name": "Técnico",
+      "thesis_required": 0
+    },
+    "PROFESIONAL TECNICO": {
+      "search_levels": [3, 4, 5],
+      "level_name": "Técnico",
+      "thesis_required": 0
+    },
+    "AUXILIAR TECNICO": {
+      "search_levels": [3, 4, 5],
+      "level_name": "Técnico",
+      "thesis_required": 0
+    },
+    "EGRESADO": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 0
+    },
+    "BACHILLER": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 0
+    },
+    "TITULO PROFESIONAL": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 1
+    },
+    "TITULO UNIVERSITARIO": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 1
+    },
+    "TITULADO": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 1
+    },
+    "LICENCIADO": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 1
+    },
+    "INGENIERO": {
+      "search_levels": [6],
+      "level_name": "Profesional Universitario",
+      "thesis_required": 1
+    },
+    "MAESTRIA": {
+      "search_levels": [7],
+      "level_name": "Maestría",
+      "thesis_required": 1
+    },
+    "DOCTORADO": {
+      "search_levels": [8],
+      "level_name": "Doctorado",
+      "thesis_required": 1
+    }
+  },
+  "additional_requirement_patterns": {
+    "accepts_related_fields": [
+      "AFINES",
+      "CARRERAS AFINES",
+      "SIMILARES"
+    ],
+    "requires_colegiado": [
+      "COLEGIADO"
+    ],
+    "requires_habilitado": [
+      "HABILITADO"
+    ],
+    "multiple_options": [
+      " O ",
+      " Y/O "
+    ]
+  }
+}
