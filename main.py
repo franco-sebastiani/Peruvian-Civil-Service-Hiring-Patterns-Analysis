@@ -21,9 +21,9 @@ async def main():
         print("1. extracting   - Scrape SERVIR job postings")
         print("2. cleaning     - Clean and standardize data")
         print("3. transforming - Transform into analysis-ready format")
-        print("4. analyzing    - Analyze data (future phase)")
+        print("\nNote: Analysis is done in Jupyter notebooks (see notebooks/ folder)")
         print("="*70)
-        mode = input("\nEnter option (extracting/cleaning/transforming/analyzing): ").strip().lower()
+        mode = input("\nEnter option (extracting/cleaning/transforming): ").strip().lower()
 
     if mode == "extracting" or mode == "1":
         from servir.src.extracting.pipeline.orchestrator import collect_all_servir_jobs
@@ -52,33 +52,61 @@ async def main():
             sys.exit(1)
     
     elif mode == "transforming" or mode == "3":
-        print("\n" + "="*70)
-        print("TRANSFORMING PHASE - NOT YET IMPLEMENTED")
-        print("="*70)
-        print("\nThis phase will:")
-        print("- Split contract_type into type + temporal_nature")
-        print("- Split experience into general + specific")
-        print("- Split academic into level + field")
-        print("- Convert knowledge/competencies/specialization to arrays")
-        print("- Create institution dimension table")
-        print("="*70 + "\n")
-        sys.exit(0)
-    
-    elif mode == "analyzing" or mode == "4":
-        print("\n" + "="*70)
-        print("ANALYZING PHASE - NOT YET IMPLEMENTED")
-        print("="*70)
-        print("\nThis phase will:")
-        print("- Detect institutional anomalies")
-        print("- Identify temporal requirement changes")
-        print("- Statistical hypothesis testing")
-        print("- Generate reports and visualizations")
-        print("="*70 + "\n")
-        sys.exit(0)
+        from servir.src.transforming.pipeline.orchestrator import TransformationOrchestrator
+        from pathlib import Path
+        
+        try:
+            print("\n" + "="*70)
+            print("TRANSFORMING PHASE")
+            print("="*70)
+            
+            # Setup paths
+            project_root = Path(__file__).resolve().parent
+            
+            cleaned_db = project_root / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"
+            transformed_db = project_root / "servir" / "data" / "transformed" / "servir_jobs_transformed.db"
+            
+            matches_dbs = {
+                'job_title': project_root / "servir" / "data" / "transformed" / "job_title" / "job_title_matches.db",
+                'institution_name': project_root / "servir" / "data" / "transformed" / "institution_name" / "institution_name_matches.db",
+                'academic': project_root / "servir" / "data" / "transformed" / "academic_profile" / "academic_matches.db"
+            }
+            
+            # Check prerequisites
+            print("\nChecking match databases...")
+            missing = []
+            for name, path in matches_dbs.items():
+                exists = path.exists()
+                print(f"  {name}: {'✓' if exists else '✗'}")
+                if not exists:
+                    missing.append(name)
+            
+            if missing:
+                print(f"\n✗ Missing match databases: {', '.join(missing)}")
+                print("\nRun the matchers first:")
+                for name in missing:
+                    print(f"  python servir/src/transforming/transformers/{name}/{name}_matcher.py")
+                sys.exit(1)
+            
+            print("\n✓ All match databases found")
+            
+            # Run orchestrator
+            orchestrator = TransformationOrchestrator(cleaned_db, transformed_db, matches_dbs)
+            orchestrator.run()
+            
+        except KeyboardInterrupt:
+            print("\n\nInterrupted by user.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\nError: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
     
     else:
         print(f"\nUnknown mode: {mode}")
-        print("Usage: python main.py [extracting/cleaning/transforming/analyzing]")
+        print("Usage: python main.py [extracting/cleaning/transforming]")
+        print("\nNote: Analysis is done in Jupyter notebooks (see notebooks/ folder)")
         sys.exit(1)
 
 

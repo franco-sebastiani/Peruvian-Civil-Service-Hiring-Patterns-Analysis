@@ -27,7 +27,7 @@ from academic_semantic_matcher import AcademicSemanticMatcher
 from academic_fuzzy_matcher import AcademicFuzzyMatcher
 
 # Import database operations
-project_root = current_dir.parent.parent.parent.parent
+project_root = current_dir.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 from servir.data.transformed.academic import operations
 
@@ -208,7 +208,7 @@ class AcademicMatcher:
 if __name__ == "__main__":
     # Paths
     script_dir = Path(__file__).resolve().parent
-    project_root = script_dir.parent.parent.parent.parent
+    project_root = script_dir.parent.parent.parent.parent.parent
     
     CLEANED_DB = project_root / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"
     CLASIFICADOR_DB = project_root / "servir" / "data" / "reference" / "clasificador_carreras" / "clasificador_carreras.db"

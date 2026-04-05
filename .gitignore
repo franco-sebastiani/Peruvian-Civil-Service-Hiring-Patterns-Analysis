@@ -186,3 +186,13 @@ cython_debug/
 servir/data/reference/MEF_budget/*.csv
 servir/data/reference/MEF_budget/*.db
 servir/data/reference/MEF_budget/comparativo_gastos_*.csv
+
+# Match databases (large intermediate files)
+servir/data/transformed/*/
+servir/data/transformed/**/*.db
+
+# Keep only the folder structure
+!servir/data/transformed/*/__init__.py
+!servir/data/transformed/*/schema.py
+!servir/data/transformed/*/queries.py
+!servir/data/transformed/*/operations.py

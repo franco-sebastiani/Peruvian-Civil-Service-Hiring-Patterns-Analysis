@@ -30,8 +30,8 @@ from job_title_semantic_matcher import JobTitleSemanticMatcher
 from job_title_fuzzy_matcher import JobTitleFuzzyMatcher
 
 # Import database operations
-project_root = current_dir.parent.parent.parent.parent
-sys.path.insert(0, str(project_root))
+# Import database operations - use absolute path
+sys.path.insert(0, "/Users/francosebastiani/Documents/GitHub/Peruvian-Civil-Service-Hiring-Patterns-Analysis")
 from servir.data.transformed.job_title import operations, queries
 
 
@@ -190,13 +190,13 @@ if __name__ == "__main__":
     script_dir = Path(__file__).resolve().parent
     
     # Navigate to project root
-    project_root = script_dir.parent.parent.parent.parent
+    project_root = script_dir.parent.parent.parent.parent.parent
     
     print(f"Script directory: {script_dir}")
     print(f"Project root: {project_root}")
     
     CLEANED_DB = project_root / "servir" / "data" / "cleaned" / "servir_jobs_cleaned.db"
-    ISCO_DB = project_root / "servir" / "data" / "reference" / "isco_08_peru.db"
+    ISCO_DB = project_root / "servir" / "data" / "reference" / "ISCO_08" / "isco_08_peru.db"
     MATCHES_DB = project_root / "servir" / "data" / "transformed" / "job_title" / "job_title_matches.db"
     
     print(f"\nDatabase paths:")

@@ -26,7 +26,7 @@ from institution_name_semantic_matcher import InstitutionSemanticMatcher
 from institution_name_fuzzy_matcher import InstitutionFuzzyMatcher
 
 # Import database operations
-project_root = current_dir.parent.parent.parent.parent
+project_root = current_dir.parent.parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 from servir.data.transformed.institution_name import operations
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     script_dir = Path(__file__).resolve().parent
     
     # Navigate to project root
-    project_root = script_dir.parent.parent.parent.parent
+    project_root = script_dir.parent.parent.parent.parent.parent
     
     print(f"Script directory: {script_dir}")
     print(f"Project root: {project_root}")

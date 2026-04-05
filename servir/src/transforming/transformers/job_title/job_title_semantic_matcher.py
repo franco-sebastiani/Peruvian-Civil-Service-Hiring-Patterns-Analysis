@@ -34,6 +34,13 @@ class JobTitleSemanticMatcher:
     
     def _load_isco_descriptions(self):
         """Load all ISCO-08 level-4 descriptions and create embeddings."""
+        # Debug output
+        print(f"DEBUG: ISCO DB path: {self.isco_db_path}")
+        print(f"DEBUG: Path exists: {self.isco_db_path.exists()}")
+        
+        if not self.isco_db_path.exists():
+            raise FileNotFoundError(f"ISCO database not found at: {self.isco_db_path}")
+        
         conn = sqlite3.connect(self.isco_db_path)
         conn.row_factory = sqlite3.Row
         
