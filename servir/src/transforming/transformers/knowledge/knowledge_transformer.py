@@ -50,9 +50,8 @@ class KnowledgeTransformer:
         print("Creating document-term matrix...")
         self.vectorizer = CountVectorizer(
             max_features=self.max_features,
-            stop_words='spanish',
             min_df=2,  # Ignore very rare words
-            max_df=0.8  # Ignore very common words
+            max_df=0.8  # Ignore very common words (acts like stopword removal)
         )
         
         doc_term_matrix = self.vectorizer.fit_transform(clean_texts)

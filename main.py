@@ -69,7 +69,7 @@ async def main():
             matches_dbs = {
                 'job_title': project_root / "servir" / "data" / "transformed" / "job_title" / "job_title_matches.db",
                 'institution_name': project_root / "servir" / "data" / "transformed" / "institution_name" / "institution_name_matches.db",
-                'academic': project_root / "servir" / "data" / "transformed" / "academic_profile" / "academic_matches.db"
+                'academic': project_root / "servir" / "data" / "transformed" / "academic" / "academic_matches.db"
             }
             
             # Check prerequisites

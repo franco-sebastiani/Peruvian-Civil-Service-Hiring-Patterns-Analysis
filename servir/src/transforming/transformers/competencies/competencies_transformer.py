@@ -49,7 +49,7 @@ class CompetenciesTransformer:
             if not text or not isinstance(text, str):
                 clean_texts.append("")
             elif text.upper() in ["NO APLICA", "NO REQUIERE", "NO INFO"]:
-                clean_texts.append("")
+                clean_texts.append("")  # Treat as empty
             else:
                 clean_texts.append(text)
         
@@ -57,9 +57,8 @@ class CompetenciesTransformer:
         print("Creating document-term matrix...")
         self.vectorizer = CountVectorizer(
             max_features=self.max_features,
-            stop_words='spanish',
-            min_df=2,
-            max_df=0.8
+            min_df=2,  # Ignore very rare words
+            max_df=0.8  # Ignore very common words (acts like stopword removal)
         )
         
         doc_term_matrix = self.vectorizer.fit_transform(clean_texts)
@@ -80,7 +79,7 @@ class CompetenciesTransformer:
         print(f"✓ LDA model fitted")
         print(f"  Perplexity: {self.lda_model.perplexity(doc_term_matrix):.2f}")
         
-        # Convert to DataFrame
+        # Convert to DataFrame with column names
         topic_cols = {f'competencies_topic_{i}': topic_distributions[:, i] 
                      for i in range(self.n_topics)}
         
@@ -89,10 +88,19 @@ class CompetenciesTransformer:
         return result_df
     
     def transform(self, competencies_texts):
-        """Transform new competencies using fitted model."""
+        """
+        Transform new competencies requirements using fitted model.
+        
+        Args:
+            competencies_texts (list): List of competencies requirement strings
+        
+        Returns:
+            pandas DataFrame: Topic distributions
+        """
         if self.vectorizer is None or self.lda_model is None:
             raise ValueError("Model not fitted. Call fit_transform() first.")
         
+        # Handle None/empty and special values
         clean_texts = []
         for text in competencies_texts:
             if not text or not isinstance(text, str):
@@ -102,16 +110,26 @@ class CompetenciesTransformer:
             else:
                 clean_texts.append(text)
         
+        # Transform using fitted vectorizer and model
         doc_term_matrix = self.vectorizer.transform(clean_texts)
         topic_distributions = self.lda_model.transform(doc_term_matrix)
         
+        # Convert to DataFrame
         topic_cols = {f'competencies_topic_{i}': topic_distributions[:, i] 
                      for i in range(self.n_topics)}
         
         return pd.DataFrame(topic_cols)
     
     def get_top_words_per_topic(self, n_words=10):
-        """Get top words for each topic."""
+        """
+        Get top words for each topic (for interpretation).
+        
+        Args:
+            n_words (int): Number of top words per topic
+        
+        Returns:
+            dict: {topic_id: [top_words]}
+        """
         if self.lda_model is None:
             raise ValueError("Model not fitted yet.")
         
@@ -126,7 +144,7 @@ class CompetenciesTransformer:
         return topics
     
     def save_model(self, model_path):
-        """Save fitted model."""
+        """Save fitted model and vectorizer for later use."""
         model_path = Path(model_path)
         model_path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -149,3 +167,33 @@ class CompetenciesTransformer:
         self.n_topics = data['n_topics']
         
         print(f"✓ Model loaded from {model_path}")
+
+
+# Testing
+if __name__ == "__main__":
+    print("Testing Competencies Transformer (LDA)")
+    print("=" * 80)
+    
+    # Test data
+    test_data = [
+        "ANÁLISIS Y SÍNTESIS",
+        "TRABAJO EN EQUIPO",
+        "LIDERAZGO Y GESTIÓN",
+        "NO APLICA",
+        "RELACIONADOS AL PUESTO"
+    ]
+    
+    # Fit and transform
+    transformer = CompetenciesTransformer(n_topics=3, max_features=50)
+    result_df = transformer.fit_transform(test_data)
+    
+    print("\nTopic distributions:")
+    print(result_df.to_string())
+    
+    print("\nTop words per topic:")
+    topics = transformer.get_top_words_per_topic(n_words=5)
+    for topic_name, words in topics.items():
+        print(f"\n{topic_name}: {', '.join(words)}")
+    
+    print("\n" + "=" * 80)
+    print("✓ Transformer test complete")
